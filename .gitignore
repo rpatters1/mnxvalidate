@@ -58,13 +58,4 @@ Thumbs.db
 *.tar.xz
 callgrind.out.*
 
-# Ignore everything in tests/data
-tests/data/*
-
-# Allow tests/data/inputs and its contents
-!tests/data/inputs/
-!tests/data/inputs/**
-
-# Explicitly exclude unwanted files in tests/data/inputs
-tests/data/inputs/**/.DS_Store
 
