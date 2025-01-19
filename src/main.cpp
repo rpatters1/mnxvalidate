@@ -132,7 +132,6 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, const Mnx
     }
 }
 
-
 int _MAIN(int argc, arg_char* argv[])
 {
     if (argc <= 0) {

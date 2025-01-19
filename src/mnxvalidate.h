@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -165,8 +165,8 @@ void showAboutPage();
 
 #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
 #undef _MAIN
-#define _MAIN mnxvalidateTestMain
-int mnxvalidateTestMain(int argc, mnxvalidate::arg_char* argv[]);
+#define _MAIN mnxValidateTestMain
+int mnxValidateTestMain(int argc, mnxvalidate::arg_char* argv[]);
 #ifdef MNXVALIDATE_VERSION
 #undef MNXVALIDATE_VERSION
 #define MNXVALIDATE_VERSION "TEST"

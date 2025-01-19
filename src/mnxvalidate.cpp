@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -220,7 +220,7 @@ static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath,
 {
     static const std::string_view MNX_SCHEMA(reinterpret_cast<const char *>(mnx_schema_json), mnx_schema_json_len);
 
-    mnxValidateContext.logMessage(LogMsg() << "validate JSON " << jsonFilePath.u8string());
+    mnxValidateContext.logMessage(LogMsg() << "Validate JSON " << jsonFilePath.u8string());
     try {
         // Load JSON schema
         nlohmann::json schemaJson = mnxValidateContext.mnxSchema.has_value()
@@ -232,7 +232,7 @@ static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath,
         // Load JSON file
         std::ifstream jsonFile;
         jsonFile.exceptions(std::ios::failbit | std::ios::badbit);
-        jsonFile.open(jsonFilePath, std::ios::binary | std::ios::ate);
+        jsonFile.open(jsonFilePath);
         if (!jsonFile.is_open()) {
             throw std::runtime_error("Unable to open JSON file: " + jsonFilePath.u8string());
         }
