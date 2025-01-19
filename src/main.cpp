@@ -65,6 +65,74 @@ static int showHelpPage(const std::string_view& programName)
 
 using namespace mnxvalidate;
 
+void processInputPathArg(const std::filesystem::path& rawInputPattern, const MnxValidateContext& mnxValidateContext)
+{
+    std::filesystem::path inputFilePattern = rawInputPattern;
+
+    // collect inputs
+    const bool isSpecificFileOrDirectory = inputFilePattern.u8string().find('*') == std::string::npos && inputFilePattern.u8string().find('?') == std::string::npos;
+    bool isSpecificFile = isSpecificFileOrDirectory && inputFilePattern.has_filename();
+    if (std::filesystem::is_directory(inputFilePattern)) {
+        isSpecificFile = false;
+        inputFilePattern /= "*.*";
+    }
+    std::filesystem::path inputDir = inputFilePattern.parent_path();
+    bool inputIsOneFile = std::filesystem::is_regular_file(inputFilePattern);        
+
+    if (isSpecificFileOrDirectory && !std::filesystem::exists(rawInputPattern) && !mnxValidateContext.forTestOutput()) {
+        throw std::runtime_error("Input path " + inputFilePattern.u8string() + " does not exist or is not a file or directory.");
+    }
+
+    // convert wildcard pattern to regex
+    auto wildcardPattern = inputFilePattern.filename().native(); // native format avoids encoding issues
+#ifdef _WIN32
+    auto regexPattern = std::regex_replace(wildcardPattern, std::wregex(LR"(\*)"), L".*");
+    regexPattern = std::regex_replace(regexPattern, std::wregex(LR"(\?)"), L".");
+    std::wregex regex(regexPattern);
+#else
+    auto regexPattern = std::regex_replace(wildcardPattern, std::regex(R"(\*)"), R"(.*)");
+    regexPattern = std::regex_replace(regexPattern, std::regex(R"(\?)"), R"(.)");
+    std::regex regex(regexPattern);
+#endif
+
+    // collect files to process first
+    // this avoids potential infinite recursion if input and output are the same format
+    std::vector<std::filesystem::path> pathsToProcess;
+    auto iterate = [&](auto& iterator) {
+        for (auto it = iterator; it != std::filesystem::end(iterator); ++it) {
+            const auto& entry = *it;
+            if constexpr (std::is_same_v<std::remove_reference_t<decltype(iterator)>, std::filesystem::recursive_directory_iterator>) {
+                if (entry.is_directory()) {
+                }
+            }
+            if (!entry.is_directory()) {
+                mnxValidateContext.logMessage(LogMsg() << "considered file " << entry.path().u8string(), LogSeverity::Verbose);
+            }
+            if (entry.is_regular_file() && std::regex_match(entry.path().filename().native(), regex)) {
+                auto inputFilePath = entry.path();
+                std::string ext = utils::toLowerCase(inputFilePath.extension().u8string());
+                if (inputExtensions.find(ext) != inputExtensions.end()) {
+                    pathsToProcess.emplace_back(inputFilePath);
+                }
+            }
+        }
+    };
+    if (inputIsOneFile || (mnxValidateContext.forTestOutput() && isSpecificFile)) {
+        pathsToProcess.push_back(inputFilePattern);
+    } else if (mnxValidateContext.recursiveSearch) {
+        std::filesystem::recursive_directory_iterator it(inputDir);
+        iterate(it);
+    } else {
+        std::filesystem::directory_iterator it(inputDir);
+        iterate(it);
+    }
+    for (const auto& path : pathsToProcess) {
+        mnxValidateContext.inputFilePath = "";
+        mnxValidateContext.processFile(path);
+    }
+}
+
+
 int _MAIN(int argc, arg_char* argv[])
 {
     if (argc <= 0) {
@@ -73,7 +141,7 @@ int _MAIN(int argc, arg_char* argv[])
     }
 
     MnxValidateContext mnxValidateContext(std::filesystem::path(*argv).stem().native());
-    
+
     if (argc < 2) {
         return showHelpPage(mnxValidateContext.programName);
     }
@@ -94,78 +162,27 @@ int _MAIN(int argc, arg_char* argv[])
     }
 
     try {
-        const std::filesystem::path rawInputPattern = args.empty()
-                                                    ? std::filesystem::current_path()
-                                                    : args[1];
-        std::filesystem::path inputFilePattern = rawInputPattern;
-
-        // collect inputs
-        const bool isSpecificFileOrDirectory = inputFilePattern.u8string().find('*') == std::string::npos && inputFilePattern.u8string().find('?') == std::string::npos;
-        bool isSpecificFile = isSpecificFileOrDirectory && inputFilePattern.has_filename();
-        if (std::filesystem::is_directory(inputFilePattern)) {
-            isSpecificFile = false;
-            inputFilePattern /= "*.*";
-        }
-        std::filesystem::path inputDir = inputFilePattern.parent_path();
-        bool inputIsOneFile = std::filesystem::is_regular_file(inputFilePattern);        
-        if (!inputIsOneFile && !isSpecificFile && !mnxValidateContext.logFilePath.has_value()) {
-            mnxValidateContext.logFilePath = "";
-        }
-        mnxValidateContext.startLogging(inputDir, argc, argv);
-
-        if (isSpecificFileOrDirectory && !std::filesystem::exists(rawInputPattern) && !mnxValidateContext.forTestOutput()) {
-            throw std::runtime_error("Input path " + inputFilePattern.u8string() + " does not exist or is not a file or directory.");
-        }
-
-        // convert wildcard pattern to regex
-        auto wildcardPattern = inputFilePattern.filename().native(); // native format avoids encoding issues
-#ifdef _WIN32
-        auto regexPattern = std::regex_replace(wildcardPattern, std::wregex(LR"(\*)"), L".*");
-        regexPattern = std::regex_replace(regexPattern, std::wregex(LR"(\?)"), L".");
-        std::wregex regex(regexPattern);
-#else
-        auto regexPattern = std::regex_replace(wildcardPattern, std::regex(R"(\*)"), R"(.*)");
-        regexPattern = std::regex_replace(regexPattern, std::regex(R"(\?)"), R"(.)");
-        std::regex regex(regexPattern);
-#endif
-
-        // collect files to process first
-        // this avoids potential infinite recursion if input and output are the same format
-        std::vector<std::filesystem::path> pathsToProcess;
-        auto iterate = [&](auto& iterator) {
-            for (auto it = iterator; it != std::filesystem::end(iterator); ++it) {
-                const auto& entry = *it;
-                if constexpr (std::is_same_v<std::remove_reference_t<decltype(iterator)>, std::filesystem::recursive_directory_iterator>) {
-                    if (entry.is_directory()) {
-                    }
-                }
-                if (!entry.is_directory()) {
-                    mnxValidateContext.logMessage(LogMsg() << "considered file " << entry.path().u8string(), LogSeverity::Verbose);
-                }
-                if (entry.is_regular_file() && std::regex_match(entry.path().filename().native(), regex)) {
-                    auto inputFilePath = entry.path();
-                    std::string ext = utils::toLowerCase(inputFilePath.extension().u8string());
-                    if (inputExtensions.find(ext) != inputExtensions.end()) {
-                        pathsToProcess.emplace_back(inputFilePath);
-                    }
-                }
+        std::filesystem::path defaultLogPath = args.empty() ? std::filesystem::current_path() : args[0];
+        if (!std::filesystem::is_directory(defaultLogPath)) {
+            defaultLogPath = defaultLogPath.parent_path();
+            if (!std::filesystem::is_directory(defaultLogPath)) {
+                defaultLogPath = std::filesystem::current_path();
             }
-        };
-        if (inputIsOneFile || (mnxValidateContext.forTestOutput() && isSpecificFile)) {
-            pathsToProcess.push_back(inputFilePattern);
-        } else if (mnxValidateContext.recursiveSearch) {
-            std::filesystem::recursive_directory_iterator it(inputDir);
-            iterate(it);
+        }
+        mnxValidateContext.startLogging(defaultLogPath, argc, argv);
+
+        if (mnxValidateContext.mnxSchemaPath.has_value()) {
+            mnxValidateContext.mnxSchema = utils::fileToString(mnxValidateContext.mnxSchemaPath.value());
+        }
+
+        if (args.empty()) {
+            processInputPathArg(std::filesystem::current_path(), mnxValidateContext);
         } else {
-            std::filesystem::directory_iterator it(inputDir);
-            iterate(it);
+            for (const auto* arg : args) {
+                processInputPathArg(arg, mnxValidateContext);
+            }
         }
-        for (const auto& path : pathsToProcess) {
-            mnxValidateContext.inputFilePath = "";
-            mnxValidateContext.processFile(path, args);
-        }
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         mnxValidateContext.logMessage(LogMsg() << e.what(), LogSeverity::Error);
     }
 

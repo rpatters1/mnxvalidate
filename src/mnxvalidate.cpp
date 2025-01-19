@@ -60,6 +60,11 @@ std::vector<const arg_char*> MnxValidateContext::parseOptions(int argc, arg_char
             quiet = true;
         } else if (next == _ARG("--verbose")) {
             verbose = true;
+        } else if (next == _ARG("--schema")) {
+            std::filesystem::path schemaPath = getNextArg();
+            if (!schemaPath.empty()) {
+                mnxSchemaPath = schemaPath;
+            }
 #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
         } else if (next == _ARG("--testing")) {
             testOutput = true;
@@ -213,12 +218,14 @@ void MnxValidateContext::endLogging()
 
 static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath, const MnxValidateContext& mnxValidateContext)
 {
-    static const std::string_view kMnxSchema(reinterpret_cast<const char *>(mnx_schema_json), mnx_schema_json_len);
+    static const std::string_view MNX_SCHEMA(reinterpret_cast<const char *>(mnx_schema_json), mnx_schema_json_len);
 
     mnxValidateContext.logMessage(LogMsg() << "validate JSON " << jsonFilePath.u8string());
     try {
         // Load JSON schema
-        nlohmann::json schemaJson = nlohmann::json::parse(kMnxSchema);
+        nlohmann::json schemaJson = mnxValidateContext.mnxSchema.has_value()
+                                  ? nlohmann::json::parse(mnxValidateContext.mnxSchema.value())
+                                  : nlohmann::json::parse(MNX_SCHEMA);
         nlohmann::json_schema::json_validator validator;
         validator.set_root_schema(schemaJson);
 
@@ -234,20 +241,18 @@ static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath,
 
         // Validate JSON
         validator.validate(jsonData);
-        mnxValidateContext.logMessage(LogMsg() << "JSON is valid against the MNX schema.");
+        mnxValidateContext.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is valid against the MNX schema.");
         return true;
     } catch (const nlohmann::json::exception& e) {
-        mnxValidateContext.logMessage(LogMsg() << "JSON parsing error: " << e.what(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
     } catch (const std::invalid_argument& e) {
         mnxValidateContext.logMessage(LogMsg() << "Invalid argument: " << e.what(), LogSeverity::Error);
-    } catch (const std::exception& e) {
-        mnxValidateContext.logMessage(LogMsg() << e.what(), LogSeverity::Error);
     }
-    mnxValidateContext.logMessage(LogMsg() << "JSON is not valid against the MNX schema.", LogSeverity::Error);
+    mnxValidateContext.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is not valid against the MNX schema.", LogSeverity::Error);
     return false;
 }
 
-void MnxValidateContext::processFile(const std::filesystem::path inpFilePath, [[maybe_unused]]const std::vector<const arg_char*>& args)
+void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) const
 {
     try {
         if (!std::filesystem::is_regular_file(inpFilePath) && !forTestOutput()) {
