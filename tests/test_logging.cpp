@@ -102,27 +102,28 @@ TEST(Logging, NonExistentFile)
     EXPECT_FALSE(std::filesystem::exists(logPath)) << "no log file should have been created";
 }
 
-/*
 TEST(Logging, PatternFile)
 {
     setupTestDataPaths();
+    std::string inputFile = "accidentals_example.mnx";
     std::filesystem::path inputPath;
-    copyInputToOutput("notAscii-其れ.musx", inputPath);
-    inputPath = getOutputPath() / "*.musx";
+    copyInputToOutput(inputFile, inputPath);
+    inputPath = getOutputPath() / "accidentals*.?nx";
     ArgList args1 = { MNXVALIDATE_NAME, inputPath.u8string() };
     checkStderr("", [&]() {
         EXPECT_EQ(mnxValidateTestMain(args1.argc(), args1.argv()), 0) << "validate " << inputPath.u8string();
     });
     auto logPath = inputPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
     EXPECT_TRUE(std::filesystem::exists(logPath)) << "log file should have been created";
-    assertStringsInFile({ "Processing", "notAscii-其れ.musx", "Output", "notAscii-其れ.enigmaxml" }, logPath, ".log");
+    assertStringsInFile({ "Processing", "accidentals_example.mnx", "is valid", "!generic" }, logPath, ".log");
 }
 
 TEST(Logging, Directory)
 {
     setupTestDataPaths();
+    std::string inputFile = "accidentals_example.mnx";
     std::filesystem::path inputPath;
-    copyInputToOutput("notAscii-其れ.musx", inputPath);
+    copyInputToOutput(inputFile, inputPath);
     inputPath = getOutputPath();
     ArgList args1 = { MNXVALIDATE_NAME, inputPath.u8string() };
     checkStderr("", [&]() {
@@ -130,6 +131,23 @@ TEST(Logging, Directory)
     });
     auto logPath = inputPath / (std::string(MNXVALIDATE_NAME) + "-logs");
     EXPECT_TRUE(std::filesystem::exists(logPath)) << "log file should have been created";
-    assertStringsInFile({ "Processing", "notAscii-其れ.musx", "Output", "notAscii-其れ.enigmaxml" }, logPath, ".log");
+    assertStringsInFile({ "Processing", "accidentals_example.mnx", "is valid" }, logPath, ".log");
 }
-*/
+
+TEST(Logging, MultipleInputs)
+{
+    setupTestDataPaths();
+    std::string validFile = "accidentals_example.mnx";
+    std::filesystem::path validPath;
+    copyInputToOutput(validFile, validPath);
+    std::string invalidFile = "generic_nonascii_其れ.json";
+    std::filesystem::path invalidPath;
+    copyInputToOutput(invalidFile, invalidPath);
+    // specific file with appending
+    ArgList args = { MNXVALIDATE_NAME, validPath.u8string(), invalidPath.u8string() };
+    checkStderr("is not valid", [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << invalidPath.u8string();
+    });
+    auto logPath = validPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
+    assertStringsInFile({ "Processing", validPath.filename().u8string(), invalidPath.filename().u8string(), "is valid", "is not valid" }, logPath, ".log");
+}

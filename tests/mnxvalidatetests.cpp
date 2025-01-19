@@ -165,8 +165,13 @@ void assertStringsInFile(const std::vector<std::string>& targets, const std::fil
     ASSERT_TRUE(file.is_open()) << "failed to open file: " << actualFilePath.u8string();
     std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     for (const auto& target : targets) {
-        EXPECT_NE(fileContents.find(target), std::string::npos)
-            << "String \"" << target << "\" not found in file: " << actualFilePath.u8string();
+        if (target.size() > 1 && target[0] == '!') {
+            EXPECT_EQ(fileContents.find(target.substr(1)), std::string::npos)
+                << "String \"" << target.substr(1) << "\" was not expected but was found in file: " << actualFilePath.u8string();
+        } else {
+            EXPECT_NE(fileContents.find(target), std::string::npos)
+                << "String \"" << target << "\" not found in file: " << actualFilePath.u8string();
+        }
     }
 }
 

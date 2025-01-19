@@ -29,7 +29,7 @@
 
 using namespace mnxvalidate;
 
-TEST(Schema, InputSchema)
+TEST(Schema, InputSchemaValid)
 {
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "generic_nonascii_其れ.json";
@@ -39,11 +39,11 @@ TEST(Schema, InputSchema)
     });
 }
 
-TEST(Schema, EmbeddedSchemaNotValid)
+TEST(Schema, InputSchemaNotValid)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / "generic_nonascii_其れ.json";
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
+    std::filesystem::path inputPath = getInputPath() / "accidentals_example.mnx";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string() };
     checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
@@ -56,5 +56,15 @@ TEST(Schema, EmbeddedSchemaValid)
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
     checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}
+
+TEST(Schema, EmbeddedSchemaNotValid)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "generic_nonascii_其れ.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
+    checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
