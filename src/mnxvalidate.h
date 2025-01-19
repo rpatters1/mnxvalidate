@@ -139,17 +139,14 @@ public:
 
     // Parse general options and return remaining options
     std::vector<const arg_char*> parseOptions(int argc, arg_char* argv[]);
-    
-    // validate paths
-    bool validatePathsAndOptions(const std::filesystem::path& outputFilePath) const;
 
-    void processFile(const std::shared_ptr<ICommand>& currentCommand, const std::filesystem::path inpFilePath, const std::vector<const arg_char*>& args);
+    void processFile(const std::filesystem::path inpFilePath, const std::vector<const arg_char*>& args);
 
     // Logging methods
     void startLogging(const std::filesystem::path& defaultLogPath, int argc, arg_char* argv[]); ///< Starts logging if logging was requested
 
     /**
-     * @brief logs a message using the mnxvalidateContext or outputs to std::cerr
+     * @brief logs a message using the mnxValidateContext or outputs to std::cerr
      * @param msg a utf-8 encoded message.
      * @param severity the message severity
     */
@@ -180,8 +177,8 @@ public:
     virtual int showHelpPage(const std::string_view& programName, const std::string& indentSpaces = {}) const = 0;
 
     virtual bool canProcess(const std::filesystem::path& inputPath) const = 0;
-    virtual Buffer processInput(const std::filesystem::path& inputPath, const MnxValidateContext& mnxvalidateContext) const = 0;
-    virtual void processOutput(const Buffer& enigmaXml, const std::filesystem::path& outputPath, const std::filesystem::path& inputPath, const MnxValidateContext& mnxvalidateContext) const = 0;
+    virtual Buffer processInput(const std::filesystem::path& inputPath, const MnxValidateContext& mnxValidateContext) const = 0;
+    virtual void processOutput(const Buffer& enigmaXml, const std::filesystem::path& outputPath, const std::filesystem::path& inputPath, const MnxValidateContext& mnxValidateContext) const = 0;
     virtual std::optional<std::string_view> defaultInputFormat() const { return std::nullopt; }
     virtual std::optional<std::string> defaultOutputFormat(const std::filesystem::path&) const { return std::nullopt; }
     

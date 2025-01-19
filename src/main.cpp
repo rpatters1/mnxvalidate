@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 #include <iostream>
-#include <map>
+#include <set>
 #include <optional>
 #include <memory>
 #include <chrono>
@@ -28,6 +28,8 @@
 
 #include "mnxvalidate.h"
 #include "utils/stringutils.h"
+
+static const std::set<std::string_view> inputExtensions = { ".mnx", ".json" };
 
 static int showHelpPage(const std::string_view& programName)
 {
@@ -70,33 +72,31 @@ int _MAIN(int argc, arg_char* argv[])
         return 1;
     }
 
-    MnxValidateContext mnxvalidateContext(std::filesystem::path(*argv).stem().native());
+    MnxValidateContext mnxValidateContext(std::filesystem::path(*argv).stem().native());
     
     if (argc < 2) {
-        return showHelpPage(mnxvalidateContext.programName);
+        return showHelpPage(mnxValidateContext.programName);
     }
 
-    std::vector<const arg_char*> args = mnxvalidateContext.parseOptions(argc, argv);
+    std::vector<const arg_char*> args = mnxValidateContext.parseOptions(argc, argv);
 
-    if (mnxvalidateContext.showVersion) {
-        std::cout << mnxvalidateContext.programName << " " << MNXVALIDATE_VERSION << std::endl;
+    if (mnxValidateContext.showVersion) {
+        std::cout << mnxValidateContext.programName << " " << MNXVALIDATE_VERSION << std::endl;
         return 0;
     }
-    if (mnxvalidateContext.showHelp) {
-        showHelpPage(mnxvalidateContext.programName);
+    if (mnxValidateContext.showHelp) {
+        showHelpPage(mnxValidateContext.programName);
         return 0;
     }
-    if (mnxvalidateContext.showAbout) {
+    if (mnxValidateContext.showAbout) {
         showAboutPage();
         return 0;
     }
-    if (args.size() < 2) {
-        std::cerr << "Not enough arguments passed" << std::endl;
-        return showHelpPage(mnxvalidateContext.programName);
-    }
 
     try {
-        const std::filesystem::path rawInputPattern = args[1];
+        const std::filesystem::path rawInputPattern = args.empty()
+                                                    ? std::filesystem::current_path()
+                                                    : args[1];
         std::filesystem::path inputFilePattern = rawInputPattern;
 
         // collect inputs
@@ -104,15 +104,16 @@ int _MAIN(int argc, arg_char* argv[])
         bool isSpecificFile = isSpecificFileOrDirectory && inputFilePattern.has_filename();
         if (std::filesystem::is_directory(inputFilePattern)) {
             isSpecificFile = false;
+            inputFilePattern /= "*.*";
         }
         std::filesystem::path inputDir = inputFilePattern.parent_path();
         bool inputIsOneFile = std::filesystem::is_regular_file(inputFilePattern);        
-        if (!inputIsOneFile && !isSpecificFile && !mnxvalidateContext.logFilePath.has_value()) {
-            mnxvalidateContext.logFilePath = "";
+        if (!inputIsOneFile && !isSpecificFile && !mnxValidateContext.logFilePath.has_value()) {
+            mnxValidateContext.logFilePath = "";
         }
-        mnxvalidateContext.startLogging(inputDir, argc, argv);
+        mnxValidateContext.startLogging(inputDir, argc, argv);
 
-        if (isSpecificFileOrDirectory && !std::filesystem::exists(rawInputPattern) && !mnxvalidateContext.forTestOutput()) {
+        if (isSpecificFileOrDirectory && !std::filesystem::exists(rawInputPattern) && !mnxValidateContext.forTestOutput()) {
             throw std::runtime_error("Input path " + inputFilePattern.u8string() + " does not exist or is not a file or directory.");
         }
 
@@ -139,32 +140,36 @@ int _MAIN(int argc, arg_char* argv[])
                     }
                 }
                 if (!entry.is_directory()) {
-                    mnxvalidateContext.logMessage(LogMsg() << "considered file " << entry.path().u8string(), LogSeverity::Verbose);
+                    mnxValidateContext.logMessage(LogMsg() << "considered file " << entry.path().u8string(), LogSeverity::Verbose);
                 }
                 if (entry.is_regular_file() && std::regex_match(entry.path().filename().native(), regex)) {
                     auto inputFilePath = entry.path();
-                }    
+                    std::string ext = utils::toLowerCase(inputFilePath.extension().u8string());
+                    if (inputExtensions.find(ext) != inputExtensions.end()) {
+                        pathsToProcess.emplace_back(inputFilePath);
+                    }
+                }
             }
         };
-        if (inputIsOneFile || (mnxvalidateContext.forTestOutput() && isSpecificFile)) {
+        if (inputIsOneFile || (mnxValidateContext.forTestOutput() && isSpecificFile)) {
             pathsToProcess.push_back(inputFilePattern);
-        } else if (mnxvalidateContext.recursiveSearch) {
+        } else if (mnxValidateContext.recursiveSearch) {
             std::filesystem::recursive_directory_iterator it(inputDir);
             iterate(it);
         } else {
             std::filesystem::directory_iterator it(inputDir);
             iterate(it);
         }
-        //for (const auto& path : pathsToProcess) {
-          //  mnxvalidateContext.inputFilePath = "";
-            //mnxvalidateContext.processFile(currentCommand, path, args);
-        //}
+        for (const auto& path : pathsToProcess) {
+            mnxValidateContext.inputFilePath = "";
+            mnxValidateContext.processFile(path, args);
+        }
     }
     catch (const std::exception& e) {
-        mnxvalidateContext.logMessage(LogMsg() << e.what(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << e.what(), LogSeverity::Error);
     }
 
-    mnxvalidateContext.endLogging();
+    mnxValidateContext.endLogging();
 
-    return mnxvalidateContext.errorOccurred;
+    return mnxValidateContext.errorOccurred;
 }

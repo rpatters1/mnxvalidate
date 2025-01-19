@@ -23,6 +23,10 @@
 
 #include "mnxvalidate.h"
 
+#include "nlohmann/json.hpp"
+#include "nlohmann/json-schema.hpp"
+#include "mnx_schema.xxd"
+
 namespace mnxvalidate {
 
 std::vector<const arg_char*> MnxValidateContext::parseOptions(int argc, arg_char* argv[])
@@ -140,17 +144,6 @@ void MnxValidateContext::logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity s
 #endif
 }
 
-bool MnxValidateContext::validatePathsAndOptions(const std::filesystem::path& outputFilePath) const
-{
-    if (inputFilePath == outputFilePath) {
-        logMessage(LogMsg() << outputFilePath.u8string() << ": " << "Input and output are the same. No action taken.");
-        return false;
-    }
-    logMessage(LogMsg() << "Output: " << outputFilePath.u8string());
-
-    return true;
-}
-
 /** returns true if input path is a directory */
 bool createDirectoryIfNeeded(const std::filesystem::path& path)
 {
@@ -218,7 +211,43 @@ void MnxValidateContext::endLogging()
     }
 }
 
-void MnxValidateContext::processFile(const std::shared_ptr<ICommand>& currentCommand, const std::filesystem::path inpFilePath, const std::vector<const arg_char*>& args)
+static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath, const MnxValidateContext& mnxValidateContext)
+{
+    static const std::string_view kMnxSchema(reinterpret_cast<const char *>(mnx_schema_json), mnx_schema_json_len);
+
+    mnxValidateContext.logMessage(LogMsg() << "validate JSON " << jsonFilePath.u8string());
+    try {
+        // Load JSON schema
+        nlohmann::json schemaJson = nlohmann::json::parse(kMnxSchema);
+        nlohmann::json_schema::json_validator validator;
+        validator.set_root_schema(schemaJson);
+
+        // Load JSON file
+        std::ifstream jsonFile;
+        jsonFile.exceptions(std::ios::failbit | std::ios::badbit);
+        jsonFile.open(jsonFilePath, std::ios::binary | std::ios::ate);
+        if (!jsonFile.is_open()) {
+            throw std::runtime_error("Unable to open JSON file: " + jsonFilePath.u8string());
+        }
+        nlohmann::json jsonData;
+        jsonFile >> jsonData;
+
+        // Validate JSON
+        validator.validate(jsonData);
+        mnxValidateContext.logMessage(LogMsg() << "JSON is valid against the MNX schema.");
+        return true;
+    } catch (const nlohmann::json::exception& e) {
+        mnxValidateContext.logMessage(LogMsg() << "JSON parsing error: " << e.what(), LogSeverity::Error);
+    } catch (const std::invalid_argument& e) {
+        mnxValidateContext.logMessage(LogMsg() << "Invalid argument: " << e.what(), LogSeverity::Error);
+    } catch (const std::exception& e) {
+        mnxValidateContext.logMessage(LogMsg() << e.what(), LogSeverity::Error);
+    }
+    mnxValidateContext.logMessage(LogMsg() << "JSON is not valid against the MNX schema.", LogSeverity::Error);
+    return false;
+}
+
+void MnxValidateContext::processFile(const std::filesystem::path inpFilePath, [[maybe_unused]]const std::vector<const arg_char*>& args)
 {
     try {
         if (!std::filesystem::is_regular_file(inpFilePath) && !forTestOutput()) {
@@ -234,46 +263,8 @@ void MnxValidateContext::processFile(const std::shared_ptr<ICommand>& currentCom
         logMessage(LogMsg() << delimiter, true);
         this->inputFilePath = inpFilePath; // assign after logging the header
 
-        const auto xmlBuffer = currentCommand->processInput(inputFilePath, *this);
+        validateJsonAgainstSchema(inputFilePath, *this);
 
-        auto calcOutpuFilePath = [&](const std::filesystem::path& path, const std::string& format) -> std::filesystem::path {
-            std::filesystem::path retval = path;
-            if (retval.is_relative()) {
-                retval = inputFilePath.parent_path() / retval;
-            }
-            if (retval.empty()) {
-                retval = std::filesystem::current_path();
-            }
-            if (createDirectoryIfNeeded(retval)) {
-                outputIsFilename = false;
-                std::filesystem::path outputFileName = inputFilePath.filename();
-                outputFileName.replace_extension(format);
-                retval = retval / outputFileName;
-            } else {
-                outputIsFilename = true;
-            }
-            return retval;
-        };
-
-        // Process output options
-        bool outputFormatSpecified = false;
-        for (size_t i = 0; i < args.size(); ++i) {
-            arg_string option = args[i];
-            if (option.rfind(_ARG("--"), 0) == 0) {  // Options start with "--"
-                arg_string outputFormat = option.substr(2);
-                std::filesystem::path outputFilePath = (i + 1 < args.size() && arg_string(args[i + 1]).rfind(_ARG("--"), 0) != 0)
-                                                     ? std::filesystem::path(args[++i])
-                                                     : inputFilePath.parent_path();
-                currentCommand->processOutput(xmlBuffer, calcOutpuFilePath(outputFilePath, outputFormat), inputFilePath, *this);
-                outputFormatSpecified = true;
-            }
-        }
-        if (!outputFormatSpecified) {
-            const auto& defaultFormat = currentCommand->defaultOutputFormat(inputFilePath);
-            if (defaultFormat.has_value()) {
-                currentCommand->processOutput(xmlBuffer, calcOutpuFilePath(inputFilePath.parent_path(), std::string(defaultFormat.value())), inputFilePath, *this);
-            }
-        }
     } catch (const std::exception& e) {
         logMessage(LogMsg() << e.what(), true, LogSeverity::Error);
     }
