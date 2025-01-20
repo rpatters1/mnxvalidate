@@ -1,0 +1,267 @@
+{
+    "mnx": {
+       "version": 1
+    },
+    "global": {
+       "measures": [
+          {
+             "time": {
+                "count": 4,
+                "unit": 4
+             }
+          }
+       ]
+    },
+    "parts": [
+       {
+          "measures": [
+             {
+                "beams": [
+                   {
+                      "events": [
+                         "grace1",
+                         "grace2"
+                      ]
+                   },
+                   {
+                      "events": [
+                         "grace3",
+                         "grace4",
+                         "grace5"
+                      ]
+                   },
+                   {
+                      "events": [
+                         "grace6",
+                         "grace7",
+                         "grace8",
+                         "grace9"
+                      ]
+                   }
+                ],
+                "clefs": [
+                   {
+                      "clef": {
+                         "sign": "G",
+                         "staffPosition": -2
+                      }
+                   }
+                ],
+                "sequences": [
+                   {
+                      "content": [
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "C"
+                                  }
+                               }
+                            ]
+                         },
+                         {
+                            "type": "grace",
+                            "content": [
+                               {
+                                  "id": "grace1",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 4,
+                                           "step": "B"
+                                        }
+                                     }
+                                  ]
+                               },
+                               {
+                                  "id": "grace2",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 5,
+                                           "step": "C"
+                                        }
+                                     }
+                                  ]
+                               }
+                            ]
+                         },
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "D"
+                                  }
+                               }
+                            ]
+                         },
+                         {
+                            "type": "grace",
+                            "content": [
+                               {
+                                  "id": "grace3",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 4,
+                                           "step": "B"
+                                        }
+                                     }
+                                  ]
+                               },
+                               {
+                                  "id": "grace4",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 5,
+                                           "step": "C"
+                                        }
+                                     }
+                                  ]
+                               },
+                               {
+                                  "id": "grace5",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 5,
+                                           "step": "D"
+                                        }
+                                     }
+                                  ]
+                               }
+                            ]
+                         },
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "E"
+                                  }
+                               }
+                            ]
+                         },
+                         {
+                            "type": "grace",
+                            "content": [
+                               {
+                                  "id": "grace6",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 4,
+                                           "step": "B"
+                                        }
+                                     }
+                                  ]
+                               },
+                               {
+                                  "id": "grace7",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 5,
+                                           "step": "C"
+                                        }
+                                     }
+                                  ]
+                               },
+                               {
+                                  "id": "grace8",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 5,
+                                           "step": "D"
+                                        }
+                                     }
+                                  ]
+                               },
+                               {
+                                  "id": "grace9",
+                                  "type": "event",
+                                  "duration": {
+                                     "base": "eighth"
+                                  },
+                                  "notes": [
+                                     {
+                                        "pitch": {
+                                           "octave": 5,
+                                           "step": "E"
+                                        }
+                                     }
+                                  ]
+                               }
+                            ]
+                         },
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "F"
+                                  }
+                               }
+                            ]
+                         }
+                      ]
+                   }
+                ]
+             }
+          ]
+       }
+    ]
+ }
+ 

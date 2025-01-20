@@ -42,7 +42,7 @@ TEST(Schema, InputSchemaValid)
 TEST(Schema, InputSchemaNotValid)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / "accidentals_example.mnx";
+    std::filesystem::path inputPath = getInputPath() / "valid.mnx";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string() };
     checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
@@ -52,7 +52,7 @@ TEST(Schema, InputSchemaNotValid)
 TEST(Schema, EmbeddedSchemaValid)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / "accidentals_example.mnx";
+    std::filesystem::path inputPath = getInputPath() / "valid.mnx";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
     checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
