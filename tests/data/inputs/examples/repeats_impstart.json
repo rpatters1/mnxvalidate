@@ -1,0 +1,53 @@
+{
+    "mnx": {
+       "version": 1
+    },
+    "global": {
+       "measures": [
+          {
+             "repeatEnd": {},
+             "time": {
+                "count": 4,
+                "unit": 4
+             }
+          }
+       ]
+    },
+    "parts": [
+       {
+          "measures": [
+             {
+                "clefs": [
+                   {
+                      "clef": {
+                         "sign": "G",
+                         "staffPosition": -2
+                      }
+                   }
+                ],
+                "sequences": [
+                   {
+                      "content": [
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "whole"
+                            },
+                            "notes": [
+                               {
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "C"
+                                  }
+                               }
+                            ]
+                         }
+                      ]
+                   }
+                ]
+             }
+          ]
+       }
+    ]
+ }
+ 
