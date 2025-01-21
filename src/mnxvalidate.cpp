@@ -121,9 +121,6 @@ void MnxValidateContext::logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity s
         LogMsg prefix = LogMsg() << "[" << getTimeStamp("%Y-%m-%d %H:%M:%S") << "] " << inputFile;
         prefix.flush();
         *logFile << prefix.str() << getSeverityStr() << msg.str() << std::endl;
-        if (severity == LogSeverity::Error) {
-            *logFile << prefix.str() << "PROCESSING ABORTED" << std::endl;
-        }
         if (severity != LogSeverity::Error) {
             return;
         }
