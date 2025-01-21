@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +48,7 @@ using namespace mnxvalidate;
 /// @brief Opens zip file using std::ifstream, which works with utf16 paths on Windows
 /// @param zipFilePath zip archive
 /// @return zip_file instance
-static miniz_cpp::zip_file openZip(const std::filesystem::path& zipFilePath, const MnxValidateContext& mnxvalidateContext)
+static miniz_cpp::zip_file openZip(const std::filesystem::path& zipFilePath, const MnxValidateContext& mnxValidateContext)
 {
     try {
         std::ifstream zipReader;
@@ -56,15 +56,15 @@ static miniz_cpp::zip_file openZip(const std::filesystem::path& zipFilePath, con
         zipReader.open(zipFilePath, std::ios::binary);
         return miniz_cpp::zip_file(zipReader);
     } catch (const std::exception &ex) {
-        mnxvalidateContext.logMessage(LogMsg() << "unable to extract data from file " << zipFilePath.u8string(), LogSeverity::Error);
-        mnxvalidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << "unable to extract data from file " << zipFilePath.u8string(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
         throw;
     }
 }
 
-std::string readFile(const std::filesystem::path& zipFilePath, const std::string& fileName, const MnxValidateContext& mnxvalidateContext)
+std::string readFile(const std::filesystem::path& zipFilePath, const std::string& fileName, const MnxValidateContext& mnxValidateContext)
 {
-    auto zip = openZip(zipFilePath, mnxvalidateContext);
+    auto zip = openZip(zipFilePath, mnxValidateContext);
     return zip.read(fileName);
 }
 
@@ -109,7 +109,7 @@ static bool iterateFiles(miniz_cpp::zip_file& zip, std::optional<std::string> se
     return calledIterator;
 }
 
-static std::string getMusicXmlScoreName(const std::filesystem::path& zipFilePath, miniz_cpp::zip_file& zip, const mnxvalidate::MnxValidateContext& mnxvalidateContext)
+static std::string getMusicXmlScoreName(const std::filesystem::path& zipFilePath, miniz_cpp::zip_file& zip, const mnxvalidate::MnxValidateContext& mnxValidateContext)
 {
     std::filesystem::path defaultName = zipFilePath.filename();
     defaultName.replace_extension(MUSICXML_EXTENSION);
@@ -133,22 +133,22 @@ static std::string getMusicXmlScoreName(const std::filesystem::path& zipFilePath
         });
         return fileName;
     } catch (const std::exception &ex) {
-        mnxvalidateContext.logMessage(LogMsg() << "unable to extract META-INF/container.xml from file " << zipFilePath.u8string(), LogSeverity::Error);
-        mnxvalidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << "unable to extract META-INF/container.xml from file " << zipFilePath.u8string(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
         throw;
     }
 }
 
-std::string getMusicXmlScoreFile(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxvalidateContext)
+std::string getMusicXmlScoreFile(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxValidateContext)
 {
-    auto zip = openZip(zipFilePath, mnxvalidateContext);
-    return zip.read(getMusicXmlScoreName(zipFilePath, zip, mnxvalidateContext));
+    auto zip = openZip(zipFilePath, mnxValidateContext);
+    return zip.read(getMusicXmlScoreName(zipFilePath, zip, mnxValidateContext));
 }
 
-bool iterateMusicXmlPartFiles(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxvalidateContext, const std::optional<std::string>& fileName, IteratorFunc iterator)
+bool iterateMusicXmlPartFiles(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxValidateContext, const std::optional<std::string>& fileName, IteratorFunc iterator)
 {
-    auto zip = openZip(zipFilePath, mnxvalidateContext);
-    std::string scoreName = getMusicXmlScoreName(zipFilePath, zip, mnxvalidateContext);
+    auto zip = openZip(zipFilePath, mnxValidateContext);
+    std::string scoreName = getMusicXmlScoreName(zipFilePath, zip, mnxValidateContext);
     return iterateFiles(zip, std::nullopt, [&](const miniz_cpp::zip_info& fileInfo) {
         if (scoreName == fileInfo.filename) {
             return true; // skip score
@@ -164,11 +164,11 @@ bool iterateMusicXmlPartFiles(const std::filesystem::path& zipFilePath, const mn
     });
 }
 
-bool iterateModifyFilesInPlace(const std::filesystem::path& zipFilePath, const std::filesystem::path& outputPath, const mnxvalidate::MnxValidateContext& mnxvalidateContext, ModifyIteratorFunc iterator)
+bool iterateModifyFilesInPlace(const std::filesystem::path& zipFilePath, const std::filesystem::path& outputPath, const mnxvalidate::MnxValidateContext& mnxValidateContext, ModifyIteratorFunc iterator)
 {
-    auto zip = openZip(zipFilePath, mnxvalidateContext);
+    auto zip = openZip(zipFilePath, mnxValidateContext);
     miniz_cpp::zip_file outputZip;
-    std::string scoreName = getMusicXmlScoreName(zipFilePath, zip, mnxvalidateContext);
+    std::string scoreName = getMusicXmlScoreName(zipFilePath, zip, mnxValidateContext);
     bool retval = iterateFiles(zip, std::nullopt, [&](const miniz_cpp::zip_info& fileInfo) {
         std::filesystem::path nextPath = utils::utf8ToPath(fileInfo.filename);
         if (nextPath.has_filename()) {
@@ -185,8 +185,8 @@ bool iterateModifyFilesInPlace(const std::filesystem::path& zipFilePath, const s
         zipWriter.open(outputPath, std::ios::binary);
         outputZip.save(zipWriter);
     } catch (const std::exception &ex) {
-        mnxvalidateContext.logMessage(LogMsg() << "unable to save data to file " << outputPath.u8string(), LogSeverity::Error);
-        mnxvalidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << "unable to save data to file " << outputPath.u8string(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
         throw;
     }
     return retval;

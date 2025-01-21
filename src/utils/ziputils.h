@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,9 +36,9 @@ namespace utils {
  * @brief Reads a specific filename from the input zip archive.
  * @param zipFilePath [in] the zip archive to search.
  * @param fileName [in] the utf8-encoded file name to search for within the archive.
- * @param mnxvalidateContext [in] the MnxValidateContext (for logging).
+ * @param mnxValidateContext [in] the MnxValidateContext (for logging).
  */
-std::string readFile(const std::filesystem::path& zipFilePath, const std::string& fileName, const mnxvalidate::MnxValidateContext& mnxvalidateContext);
+std::string readFile(const std::filesystem::path& zipFilePath, const std::string& fileName, const mnxvalidate::MnxValidateContext& mnxValidateContext);
 
 /// @brief iterator func that feeds the next filename and xmldata
 using IteratorFunc = std::function<bool(const std::filesystem::path& fileName, const std::string& xmlData)>;
@@ -46,18 +46,18 @@ using IteratorFunc = std::function<bool(const std::filesystem::path& fileName, c
 /**
  * @brief Finds and returns the score file from a compressed MusicXml file.
  * @param zipFilePath [in] the compressed MusicXml archive to search.
- * @param mnxvalidateContext [in] the MnxValidateContext (for logging).
+ * @param mnxValidateContext [in] the MnxValidateContext (for logging).
  */
-std::string getMusicXmlScoreFile(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxvalidateContext);
+std::string getMusicXmlScoreFile(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxValidateContext);
 
 /**
  * @brief Iterates through each music xml part file in a compressed MusicXml file. (The score is skipped.)
  * @param zipFilePath [in] the compressed MusicXml archive to search.
- * @param mnxvalidateContext [in] the MnxValidateContext (for logging).
+ * @param mnxValidateContext [in] the MnxValidateContext (for logging).
  * @param onlyFileName [in] if this has a value, only this name feeds to the iterator. It should be encoded utf-8.
  * @param iterator an iterator function that feeds the next filename and xmldata. Return `false` from this function to stop iterating.
  */
-bool iterateMusicXmlPartFiles(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxvalidateContext, const std::optional<std::string>& fileName, IteratorFunc iterator);
+bool iterateMusicXmlPartFiles(const std::filesystem::path& zipFilePath, const mnxvalidate::MnxValidateContext& mnxValidateContext, const std::optional<std::string>& fileName, IteratorFunc iterator);
 
 using ModifyIteratorFunc = std::function<bool(const std::filesystem::path& fileName, std::string& fileContents, bool isScore)>;
 
@@ -65,9 +65,9 @@ using ModifyIteratorFunc = std::function<bool(const std::filesystem::path& fileN
  * @brief Iterates through every file in a zip archive to create a modified zip archive.
  * @param zipFilePath [in] the compressed MusicXml archive to search.
  * @param outputPath [in] the compressed MusicXml archive to search.
- * @param mnxvalidateContext [in] the MnxValidateContext (for logging).
+ * @param mnxValidateContext [in] the MnxValidateContext (for logging).
  * @param iterator an iterator function that feeds the next filename and xmldata. You can modify the xmldata. You can skip a file by returning false.
  */
-bool iterateModifyFilesInPlace(const std::filesystem::path& zipFilePath, const std::filesystem::path& outputPath, const mnxvalidate::MnxValidateContext& mnxvalidateContext, ModifyIteratorFunc iterator);
+bool iterateModifyFilesInPlace(const std::filesystem::path& zipFilePath, const std::filesystem::path& outputPath, const mnxvalidate::MnxValidateContext& mnxValidateContext, ModifyIteratorFunc iterator);
 
 } // namespace utils

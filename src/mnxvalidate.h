@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,22 +86,6 @@ using arg_string = std::string;
 using Buffer = std::vector<char>;
 using LogMsg = std::stringstream;
 
-// Function to find the appropriate processor
-template <typename Processors>
-inline decltype(Processors::value_type::processor) findProcessor(const Processors& processors, const std::string& extension)
-{
-    std::string key = utils::toLowerCase(extension);
-    if (key.rfind(".", 0) == 0) {
-        key = extension.substr(1);
-    }
-    for (const auto& p : processors) {
-        if (key == p.extension) {
-            return p.processor;
-        }
-    }
-    throw std::invalid_argument("Unsupported format: " + key);
-}
-
 /// @brief defines log message severity
 enum class LogSeverity
 {
@@ -131,7 +115,11 @@ public:
     bool quiet{};
     std::optional<std::filesystem::path> logFilePath;
     std::shared_ptr<std::ofstream> logFile;
-    std::filesystem::path inputFilePath;
+
+    std::optional<std::filesystem::path> mnxSchemaPath;
+    std::optional<std::string> mnxSchema;
+
+    mutable std::filesystem::path inputFilePath;
 
  #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
     bool testOutput{};
@@ -139,17 +127,14 @@ public:
 
     // Parse general options and return remaining options
     std::vector<const arg_char*> parseOptions(int argc, arg_char* argv[]);
-    
-    // validate paths
-    bool validatePathsAndOptions(const std::filesystem::path& outputFilePath) const;
 
-    void processFile(const std::shared_ptr<ICommand>& currentCommand, const std::filesystem::path inpFilePath, const std::vector<const arg_char*>& args);
+    void processFile(const std::filesystem::path inpFilePath) const;
 
     // Logging methods
     void startLogging(const std::filesystem::path& defaultLogPath, int argc, arg_char* argv[]); ///< Starts logging if logging was requested
 
     /**
-     * @brief logs a message using the mnxvalidateContext or outputs to std::cerr
+     * @brief logs a message using the mnxValidateContext or outputs to std::cerr
      * @param msg a utf-8 encoded message.
      * @param severity the message severity
     */
@@ -171,23 +156,6 @@ private:
     void logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity severity = LogSeverity::Info) const;
 };
 
-class ICommand
-{
-public:
-    ICommand() = default;
-    virtual ~ICommand() = default;
-
-    virtual int showHelpPage(const std::string_view& programName, const std::string& indentSpaces = {}) const = 0;
-
-    virtual bool canProcess(const std::filesystem::path& inputPath) const = 0;
-    virtual Buffer processInput(const std::filesystem::path& inputPath, const MnxValidateContext& mnxvalidateContext) const = 0;
-    virtual void processOutput(const Buffer& enigmaXml, const std::filesystem::path& outputPath, const std::filesystem::path& inputPath, const MnxValidateContext& mnxvalidateContext) const = 0;
-    virtual std::optional<std::string_view> defaultInputFormat() const { return std::nullopt; }
-    virtual std::optional<std::string> defaultOutputFormat(const std::filesystem::path&) const { return std::nullopt; }
-    
-    virtual const std::string_view commandName() const = 0;
-};
-
 std::string getTimeStamp(const std::string& fmt);
 
 bool createDirectoryIfNeeded(const std::filesystem::path& path);
@@ -197,8 +165,8 @@ void showAboutPage();
 
 #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
 #undef _MAIN
-#define _MAIN mnxvalidateTestMain
-int mnxvalidateTestMain(int argc, mnxvalidate::arg_char* argv[]);
+#define _MAIN mnxValidateTestMain
+int mnxValidateTestMain(int argc, mnxvalidate::arg_char* argv[]);
 #ifdef MNXVALIDATE_VERSION
 #undef MNXVALIDATE_VERSION
 #define MNXVALIDATE_VERSION "TEST"

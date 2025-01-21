@@ -1,5 +1,6 @@
+
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,19 +20,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma once
-
+#include <string>
 #include <filesystem>
-#include <optional>
+#include <iterator>
 
+#include "gtest/gtest.h"
 #include "mnxvalidate.h"
+#include "test_utils.h"
 
- //placeholder function
-
-namespace mnxvalidate {
-namespace mnx {
-
-void convert(const std::filesystem::path& file, const Buffer&, const MnxValidateContext& mnxvalidateContext);
-
-} // namespace mnx
-} // namespace mnxvalidate
+TEST(Examples, All)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "examples";
+    ArgList args1 = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("is valid"), "!is not valid" }, [&]() {
+        EXPECT_EQ(mnxValidateTestMain(args1.argc(), args1.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}

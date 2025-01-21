@@ -1,0 +1,105 @@
+{
+    "mnx": {
+       "version": 1
+    },
+    "global": {
+       "measures": [
+          {
+             "barline": {
+                "type": "regular"
+             },
+             "time": {
+                "count": 4,
+                "unit": 4
+             }
+          }
+       ],
+       "styles": [
+          {
+             "color": "#0080FF",
+             "selector": ".emphasized"
+          }
+       ]
+    },
+    "parts": [
+       {
+          "measures": [
+             {
+                "clefs": [
+                   {
+                      "clef": {
+                         "sign": "G",
+                         "staffPosition": -2
+                      }
+                   }
+                ],
+                "sequences": [
+                   {
+                      "content": [
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "class": "emphasized",
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "C"
+                                  }
+                               }
+                            ]
+                         },
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "E"
+                                  }
+                               }
+                            ]
+                         },
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "pitch": {
+                                     "octave": 5,
+                                     "step": "G"
+                                  }
+                               }
+                            ]
+                         },
+                         {
+                            "type": "event",
+                            "duration": {
+                               "base": "quarter"
+                            },
+                            "notes": [
+                               {
+                                  "class": "emphasized",
+                                  "pitch": {
+                                     "octave": 6,
+                                     "step": "C"
+                                  }
+                               }
+                            ]
+                         }
+                      ]
+                   }
+                ]
+             }
+          ]
+       }
+    ]
+ }
+ 

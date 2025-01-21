@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +48,7 @@ static const std::array<std::pair<std::string_view, std::basic_string_view<unsig
     { "mnxvalidate", mnxvalidateLicense },
     { "nlohmann json", nlohmannLicense },
     { "json schema validator", jsonSchemaValidatorLicense },
-    { "miniz-cpp", minizLicense },
+    //{ "miniz-cpp", minizLicense },
 }};
 
 namespace mnxvalidate {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,7 @@ void checkStderr(const std::vector<std::string>& expectedMessages, std::function
             EXPECT_TRUE(capturedErrors.empty()) << "No message expected but got " << capturedErrors;
         } else if (expectedMessage[0] == '!') {
             EXPECT_EQ(capturedErrors.find(expectedMessage.substr(1)), std::string::npos)
-                << "Message \"" << expectedMessage.substr(1) << "\" found but not expected";
+                << "Message \"" << expectedMessage.substr(1) << "\" found but not expected: " << capturedErrors;
         } else {
             EXPECT_NE(capturedErrors.find(expectedMessage), std::string::npos)
                 << "Message \"" << expectedMessage << "\" not found. Actual: " << capturedErrors;
@@ -86,16 +86,16 @@ void checkStdout(const std::vector<std::string>& expectedMessages, std::function
     EXPECT_TRUE(nullStream.str().empty()) << "Error occurred: " << nullStream.str();
 
     // check for coutStream for error
-    std::string capturesMessages = coutStream.str();
+    std::string capturedMessages = coutStream.str();
     for (const auto& expectedMessage : expectedMessages) {
         if (expectedMessage.empty()) {
-            EXPECT_TRUE(capturesMessages.empty()) << "No message expected but got " << capturesMessages;
+            EXPECT_TRUE(capturedMessages.empty()) << "No message expected but got " << capturedMessages;
         } else if (expectedMessage[0] == '!') {
-            EXPECT_EQ(capturesMessages.find(expectedMessage.substr(1)), std::string::npos)
-                << "Message \"" << expectedMessage.substr(1) << "\" found but not expected";
+            EXPECT_EQ(capturedMessages.find(expectedMessage.substr(1)), std::string::npos)
+                << "Message \"" << expectedMessage.substr(1) << "\" found but not expected: " << capturedMessages;
         } else {
-            EXPECT_NE(capturesMessages.find(expectedMessage), std::string::npos)
-                << "Message \"" << expectedMessage << "\" not found. Actual: " << capturesMessages;
+            EXPECT_NE(capturedMessages.find(expectedMessage), std::string::npos)
+                << "Message \"" << expectedMessage << "\" not found. Actual: " << capturedMessages;
         }
     }
 }
@@ -165,8 +165,13 @@ void assertStringsInFile(const std::vector<std::string>& targets, const std::fil
     ASSERT_TRUE(file.is_open()) << "failed to open file: " << actualFilePath.u8string();
     std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     for (const auto& target : targets) {
-        EXPECT_NE(fileContents.find(target), std::string::npos)
-            << "String \"" << target << "\" not found in file: " << actualFilePath.u8string();
+        if (target.size() > 1 && target[0] == '!') {
+            EXPECT_EQ(fileContents.find(target.substr(1)), std::string::npos)
+                << "String \"" << target.substr(1) << "\" was not expected but was found in file: " << actualFilePath.u8string();
+        } else {
+            EXPECT_NE(fileContents.find(target), std::string::npos)
+                << "String \"" << target << "\" not found in file: " << actualFilePath.u8string();
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Robert Patterson
+ * Copyright (C) 2025, Robert Patterson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -115,6 +115,21 @@ inline std::string toLowerCase(const std::string& inp)
     std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) { return std::tolower(c); });
     return s;
+}
+
+inline std::string fileToString(const std::filesystem::path& pathToRead)
+{
+    std::ifstream file;
+    file.exceptions(std::ios::failbit | std::ios::badbit);
+    file.open(pathToRead, std::ios::binary | std::ios::ate);
+
+    // Preallocate retval based on file size
+    std::streamsize fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::string retval(static_cast<std::size_t>(fileSize), 0);
+    file.read(retval.data(), fileSize);
+    return retval;
 }
 
 
