@@ -33,18 +33,15 @@ static const std::set<std::string_view> inputExtensions = { ".mnx", ".json" };
 
 static int showHelpPage(const std::string_view& programName)
 {
-    std::cout << "Usage: " << programName << " <command> <input-pattern> [--options]" << std::endl;
+    std::cout << "Usage: " << programName << " <input-pattern> [<input-pattern>...] [--options]" << std::endl;
     std::cout << std::endl;
 
     // General options
     std::cout << "General options:" << std::endl;
     std::cout << "  --about                         Show acknowledgements and exit" << std::endl;
-    std::cout << "  --exclude folder-name           Exclude the specified folder name from recursive searches" << std::endl;
     std::cout << "  --help                          Show this help message and exit" << std::endl;
-    std::cout << "  --force                         Overwrite existing file(s)" << std::endl;
-    std::cout << "  --part [optional-part-name]     Process named part or first part if name is omitted" << std::endl;
     std::cout << "  --recursive                     Recursively search subdirectories of the input directory" << std::endl;
-    std::cout << "  --all-parts                     Process all parts and score" << std::endl;
+    std::cout << "  --schema [file-path]            Validate against this json schema file rather than the embedded one." << std::endl;
     std::cout << "  --version                       Show program version and exit" << std::endl;
     std::cout << std::endl;
 
