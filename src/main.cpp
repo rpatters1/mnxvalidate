@@ -74,7 +74,10 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
         inputFilePattern /= "*.*";
     }
     std::filesystem::path inputDir = inputFilePattern.parent_path();
-    bool inputIsOneFile = std::filesystem::is_regular_file(inputFilePattern);        
+    if (inputDir.is_relative()) {
+        inputDir = std::filesystem::current_path() / inputDir;
+    }
+    bool inputIsOneFile = std::filesystem::is_regular_file(inputFilePattern);
     if (!inputIsOneFile && !isSpecificFile && !mnxValidateContext.logFilePath.has_value()) {
         mnxValidateContext.logFilePath = "";
     }
