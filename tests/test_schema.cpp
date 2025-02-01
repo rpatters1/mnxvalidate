@@ -33,7 +33,7 @@ TEST(Schema, InputSchemaValid)
 {
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / utils::utf8ToPath("generic_nonascii_其れ.json");
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string() };
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string(), "--schema-only" };
     checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });

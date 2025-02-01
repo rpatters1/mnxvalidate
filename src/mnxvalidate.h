@@ -28,9 +28,10 @@
 #include <optional>
 #include <fstream>
 #include <functional>
-
+#include <unordered_set>
 
 #include "utils/stringutils.h"
+#include "nlohmann/json.hpp"
 
 inline constexpr char MNX_EXTENSION[]       = "mnx";
 inline constexpr char JSON_EXTENSION[]      = "json";
@@ -46,17 +47,6 @@ inline constexpr char JSON_EXTENSION[]      = "json";
 #endif
 
 namespace mnxvalidate {
-
-// This function exists as std::to_array in C++20
-template <typename T, std::size_t N>
-inline constexpr std::array<T, N> to_array(const T(&arr)[N])
-{
-    std::array<T, N> result{};
-    for (std::size_t i = 0; i < N; ++i) {
-        result[i] = arr[i];
-    }
-    return result;
-}
 
 #ifdef _WIN32
 using arg_view = std::wstring_view;
@@ -85,6 +75,7 @@ using arg_string = std::string;
 
 using Buffer = std::vector<char>;
 using LogMsg = std::stringstream;
+using json = nlohmann::json;
 
 /// @brief defines log message severity
 enum class LogSeverity
@@ -118,10 +109,13 @@ public:
 
     std::optional<std::filesystem::path> mnxSchemaPath;
     std::optional<std::string> mnxSchema;
+    bool schemaOnly{};
 
     mutable std::filesystem::path inputFilePath;
+    mutable std::unordered_set<std::string> mnxPartList;
+    mutable std::unordered_set<std::string> mnxLayoutList;
 
- #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
+#ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
     bool testOutput{};
 #endif
 
@@ -160,6 +154,15 @@ std::string getTimeStamp(const std::string& fmt);
 
 bool createDirectoryIfNeeded(const std::filesystem::path& path);
 void showAboutPage();
+
+inline bool nodeExists(json jsonData, const std::string_view& nodeName, bool required = true)
+{
+    bool retval = jsonData.contains(nodeName);
+    if (required && !retval) {
+        throw std::invalid_argument("Validated JSON node does not contain required value " + std::string(nodeName) + '!');
+    }
+    return retval;
+}
 
 } // namespace mnxvalidate
 

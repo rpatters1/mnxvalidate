@@ -42,6 +42,7 @@ static int showHelpPage(const std::string_view& programName)
     std::cout << "  --help                          Show this help message and exit" << std::endl;
     std::cout << "  --recursive                     Recursively search subdirectories of the input directory" << std::endl;
     std::cout << "  --schema [file-path]            Validate against this json schema file rather than the embedded one." << std::endl;
+    std::cout << "  --schema-only                   Only validate against the schema. Perform no other validation checks." << std::endl;
     std::cout << "  --version                       Show program version and exit" << std::endl;
     std::cout << std::endl;
 

@@ -23,7 +23,6 @@
 
 #include "mnxvalidate.h"
 
-#include "nlohmann/json.hpp"
 #include "nlohmann/json-schema.hpp"
 #include "mnx_schema.xxd"
 
@@ -65,6 +64,8 @@ std::vector<const arg_char*> MnxValidateContext::parseOptions(int argc, arg_char
             if (!schemaPath.empty()) {
                 mnxSchemaPath = schemaPath;
             }
+        } else if (next == _ARG("--schema-only")) {
+            schemaOnly = true;
 #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
         } else if (next == _ARG("--testing")) {
             testOutput = true;
@@ -213,16 +214,17 @@ void MnxValidateContext::endLogging()
     }
 }
 
-static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath, const MnxValidateContext& mnxValidateContext)
+static std::pair<bool, json> validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath, const MnxValidateContext& context)
 {
     static const std::string_view MNX_SCHEMA(reinterpret_cast<const char *>(mnx_schema_json), mnx_schema_json_len);
 
-    mnxValidateContext.logMessage(LogMsg() << "Validate JSON " << jsonFilePath.u8string());
+    context.logMessage(LogMsg() << "Validate JSON " << jsonFilePath.u8string());
+    json jsonData;
     try {
         // Load JSON schema
-        nlohmann::json schemaJson = mnxValidateContext.mnxSchema.has_value()
-                                  ? nlohmann::json::parse(mnxValidateContext.mnxSchema.value())
-                                  : nlohmann::json::parse(MNX_SCHEMA);
+        json schemaJson = context.mnxSchema.has_value()
+                        ? json::parse(context.mnxSchema.value())
+                        : json::parse(MNX_SCHEMA);
         nlohmann::json_schema::json_validator validator;
         validator.set_root_schema(schemaJson);
 
@@ -233,20 +235,77 @@ static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath,
         if (!jsonFile.is_open()) {
             throw std::runtime_error("Unable to open JSON file: " + jsonFilePath.u8string());
         }
-        nlohmann::json jsonData;
         jsonFile >> jsonData;
 
         // Validate JSON
         validator.validate(jsonData);
-        mnxValidateContext.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is valid against the MNX schema.");
-        return true;
-    } catch (const nlohmann::json::exception& e) {
-        mnxValidateContext.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
+        context.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is valid against the MNX schema.");
+        return std::make_pair(true, jsonData);
+    } catch (const json::exception& e) {
+        context.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
     } catch (const std::invalid_argument& e) {
-        mnxValidateContext.logMessage(LogMsg() << "Invalid argument: " << e.what(), LogSeverity::Error);
+        context.logMessage(LogMsg() << "Invalid argument: " << e.what(), LogSeverity::Error);
     }
-    mnxValidateContext.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is not valid against the MNX schema.", LogSeverity::Error);
-    return false;
+    context.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is not valid against the MNX schema.", LogSeverity::Error);
+    return std::make_pair(false, jsonData);
+}
+
+static void validateParts(json jsonData, const MnxValidateContext& context)
+{
+    if (nodeExists(jsonData, "parts")) {
+        for (const auto& part : jsonData["parts"]) {
+            if (part.contains("id")) {
+                context.mnxPartList.insert(part["id"]);
+            }
+        }
+    }
+}
+
+static void validateLayouts(json jsonData, const MnxValidateContext& context)
+{
+    if (!nodeExists(jsonData, "layouts", false)) {
+        return; // layouts are *not* required in MNX
+    }
+    for (const auto& layout : jsonData["layouts"]) {
+        if (nodeExists(layout, "id")) {
+            context.mnxLayoutList.insert(layout["id"]);
+        }
+        auto validateContent = [layout, &context](json content, auto&& validateContent) -> void {
+            if (!content.is_array()) {
+                throw std::invalid_argument("Layout content node in validated JSON is not an array!");
+            }
+            for (const auto& element : content) {
+                if (nodeExists(element, "type")) {
+                    if (element["type"] == "group") {
+                        if (nodeExists(element, "content")) {
+                            validateContent(element["content"], validateContent);
+                        }
+                    } else if (element["type"] == "staff") {
+                        /// @todo validate "labelref"?
+                        if (nodeExists(element, "sources")) {
+                            if (!content.is_array()) {
+                                throw std::invalid_argument("Staff sources node in validated JSON is not an array!");
+                            }
+                            for (const auto& source : element["sources"]) {
+                                if (nodeExists(source, "part")) {
+                                    auto it = context.mnxPartList.find(source["part"]);
+                                    if (it == context.mnxPartList.end()) {
+                                        context.logMessage(LogMsg() << "Layout " << layout["id"]
+                                            << " contains staff source with non-existent part " << source["part"] << '.', LogSeverity::Error);
+                                    }
+                                }
+                                /// @todo validate "labelref"?
+                                /// @todo validate "voice"?
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        if (nodeExists(layout, "content")) {
+            validateContent(layout["content"], validateContent);
+        }
+    }
 }
 
 void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) const
@@ -265,8 +324,12 @@ void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) co
         logMessage(LogMsg() << delimiter, true);
         this->inputFilePath = inpFilePath; // assign after logging the header
 
-        validateJsonAgainstSchema(inputFilePath, *this);
-
+        auto [success, jsonData] = validateJsonAgainstSchema(inputFilePath, *this);
+        if (success && !schemaOnly) {
+            // these calls are order-dependent
+            validateParts(jsonData, *this);
+            validateLayouts(jsonData, *this);
+        }
     } catch (const std::exception& e) {
         logMessage(LogMsg() << e.what(), true, LogSeverity::Error);
     }
