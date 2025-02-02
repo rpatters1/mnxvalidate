@@ -133,7 +133,7 @@ void MnxValidateContext::logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity s
         DWORD consoleMode{};
         if (::GetConsoleMode(hConsole, &consoleMode)) {
             std::wstringstream wMsg;
-            wMsg << utils::stringToWstring(msg.str()) << std::endl;
+            wMsg << utils::stringToWstring(inputFile + getSeverityStr() + msg.str()) << std::endl;
             DWORD written{};
             if (::WriteConsoleW(hConsole, wMsg.str().data(), static_cast<DWORD>(wMsg.str().size()), &written, nullptr)) {
                 return;
@@ -143,7 +143,7 @@ void MnxValidateContext::logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity s
     }
     std::wcerr << utils::stringToWstring(msg.str()) << std::endl;
 #else
-    std::cerr << msg.str() << std::endl;
+    std::cerr << inputFile << getSeverityStr() << msg.str() << std::endl;
 #endif
 }
 
@@ -218,7 +218,6 @@ static std::pair<bool, json> validateJsonAgainstSchema(const std::filesystem::pa
 {
     static const std::string_view MNX_SCHEMA(reinterpret_cast<const char *>(mnx_schema_json), mnx_schema_json_len);
 
-    context.logMessage(LogMsg() << "Validate JSON " << jsonFilePath.u8string());
     json jsonData;
     try {
         // Load JSON schema
@@ -239,72 +238,140 @@ static std::pair<bool, json> validateJsonAgainstSchema(const std::filesystem::pa
 
         // Validate JSON
         validator.validate(jsonData);
-        context.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is valid against the MNX schema.");
+        context.logMessage(LogMsg() << "is valid against the MNX schema.");
         return std::make_pair(true, jsonData);
     } catch (const json::exception& e) {
         context.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
     } catch (const std::invalid_argument& e) {
         context.logMessage(LogMsg() << "Invalid argument: " << e.what(), LogSeverity::Error);
     }
-    context.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is not valid against the MNX schema.", LogSeverity::Error);
+    context.logMessage(LogMsg() << " is not valid against the MNX schema.", LogSeverity::Error);
     return std::make_pair(false, jsonData);
 }
 
 static void validateParts(json jsonData, const MnxValidateContext& context)
 {
+    bool valid = true;
     if (nodeExists(jsonData, "parts")) {
         for (const auto& part : jsonData["parts"]) {
             if (part.contains("id")) {
-                context.mnxPartList.insert(part["id"]);
+                if (!context.addKey(part["id"], context.mnxPartList, "part")) {
+                    valid = false;
+                }
             }
         }
+    }
+    if (valid) {
+        context.logMessage(LogMsg() << "validated all parts.");
     }
 }
 
 static void validateLayouts(json jsonData, const MnxValidateContext& context)
 {
-    if (!nodeExists(jsonData, "layouts", false)) {
-        return; // layouts are *not* required in MNX
-    }
-    for (const auto& layout : jsonData["layouts"]) {
-        if (nodeExists(layout, "id")) {
-            context.mnxLayoutList.insert(layout["id"]);
+    bool valid = true;
+    if (nodeExists(jsonData, "layouts", false)) {  // layouts are *not* required in MNX
+        if (!jsonData["layouts"].is_array()) {
+            throw std::invalid_argument("Layouts node in validated JSON is not an array!");
         }
-        auto validateContent = [layout, &context](json content, auto&& validateContent) -> void {
-            if (!content.is_array()) {
-                throw std::invalid_argument("Layout content node in validated JSON is not an array!");
+        for (const auto& layout : jsonData["layouts"]) {
+            if (nodeExists(layout, "id")) {
+                if (!context.addKey(layout["id"], context.mnxLayoutList, "layout")) {
+                    valid = false;
+                }
             }
-            for (const auto& element : content) {
-                if (nodeExists(element, "type")) {
-                    if (element["type"] == "group") {
-                        if (nodeExists(element, "content")) {
-                            validateContent(element["content"], validateContent);
-                        }
-                    } else if (element["type"] == "staff") {
-                        /// @todo validate "labelref"?
-                        if (nodeExists(element, "sources")) {
-                            if (!content.is_array()) {
-                                throw std::invalid_argument("Staff sources node in validated JSON is not an array!");
+            auto validateContent = [&](json content, auto&& validateContent) -> void {
+                if (!content.is_array()) {
+                    throw std::invalid_argument("Layout content node in validated JSON is not an array!");
+                }
+                for (const auto& element : content) {
+                    if (nodeExists(element, "type")) {
+                        if (element["type"] == "group") {
+                            if (nodeExists(element, "content")) {
+                                validateContent(element["content"], validateContent);
                             }
-                            for (const auto& source : element["sources"]) {
-                                if (nodeExists(source, "part")) {
-                                    auto it = context.mnxPartList.find(source["part"]);
-                                    if (it == context.mnxPartList.end()) {
-                                        context.logMessage(LogMsg() << "Layout " << layout["id"]
-                                            << " contains staff source with non-existent part " << source["part"] << '.', LogSeverity::Error);
+                        }
+                        else if (element["type"] == "staff") {
+                            /// @todo validate "labelref"?
+                            if (nodeExists(element, "sources")) {
+                                if (!content.is_array()) {
+                                    throw std::invalid_argument("Staff sources node in validated JSON is not an array!");
+                                }
+                                for (const auto& source : element["sources"]) {
+                                    if (nodeExists(source, "part")) {
+                                        if (!context.checkPart(source["part"], "Layout " + layout["id"].dump())) {
+                                            valid = false;
+                                        }
+                                    }
+                                    /// @todo validate "labelref"?
+                                    /// @todo validate "voice"?
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            if (nodeExists(layout, "content")) {
+                validateContent(layout["content"], validateContent);
+            }
+        }
+    }
+    if (valid) {
+        context.logMessage(LogMsg() << "validated all layouts.");
+    }
+}
+
+static void validateScores(json jsonData, const MnxValidateContext& context)
+{
+    bool valid = true;
+    if (nodeExists(jsonData, "scores", false)) {  // scores are *not* required in MNX
+        if (!jsonData["layouts"].is_array()) {
+            throw std::invalid_argument("Scores node in validated JSON is not an array!");
+        }
+        for (const auto& score : jsonData["scores"]) {
+            if (score.contains("layout")) {
+                if (!context.checkLayout(score["layout"], "Score " + score["name"].dump())) {
+                    valid = false;
+                }
+            }
+            /// @todo validate multimeasureRests
+            if (score.contains("pages")) {
+                for (size_t x = 0; x < score["pages"].size(); x++) {
+                    const auto& page = score["pages"][x];
+                    if (page.contains("layout")) {
+                        if (!context.checkLayout(page["layout"], "Page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                            valid = false;
+                        }
+                    }
+                    if (nodeExists(page, "systems")) { // "systems" is required
+                        for (size_t y = 0; y < page["systems"].size(); y++) {
+                            const auto& system = page["systems"][y];
+                            if (system.contains("layout")) {
+                                if (!context.checkLayout(system["layout"], "System[" + std::to_string(y)
+                                            + "] in page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                                    valid = false;
+                                }
+                            }
+                            if (system.contains("layoutChanges")) {
+                                for (size_t z = 0; z < system["layoutChanges"].size(); z++) {
+                                    const auto& layoutChange = system["layoutChanges"][z];
+                                    if (nodeExists(layoutChange, "layout")) { // "layout" is required
+                                        if (!context.checkLayout(layoutChange["layout"], "Layout change[" + std::to_string(z) + "] in system[" + std::to_string(y)
+                                                    + "] in page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                                            valid = false;
+                                        }
+                                        /// @todo validate location.bar
+                                        /// @todo perhaps eventually flag location.position.fraction if it is too large for the measure
                                     }
                                 }
-                                /// @todo validate "labelref"?
-                                /// @todo validate "voice"?
                             }
                         }
                     }
                 }
             }
-        };
-        if (nodeExists(layout, "content")) {
-            validateContent(layout["content"], validateContent);
         }
+    }
+    if (valid) {
+        context.logMessage(LogMsg() << "validated all scores.");
     }
 }
 
@@ -329,6 +396,7 @@ void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) co
             // these calls are order-dependent
             validateParts(jsonData, *this);
             validateLayouts(jsonData, *this);
+            validateScores(jsonData, *this);
         }
     } catch (const std::exception& e) {
         logMessage(LogMsg() << e.what(), true, LogSeverity::Error);

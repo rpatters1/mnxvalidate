@@ -146,6 +146,38 @@ public:
 #endif
     }
 
+    bool addKey(const std::string& key, std::unordered_set<std::string>& keySet, const std::string& setDescription) const
+    {
+        auto it = keySet.find(key);
+        if (it == keySet.end()) {
+            keySet.insert(key);
+            return true;
+        } else {
+            logMessage(LogMsg() << "more than one " << setDescription << " with id \"" << key << "\" exists.", LogSeverity::Error);
+        }
+        return false;
+    }
+
+    bool checkPart(const std::string& partId, const std::string& parentDesc) const
+    {
+        auto it = mnxPartList.find(partId);
+        if (it == mnxPartList.end()) {
+            logMessage(LogMsg() << parentDesc << " references non-existent part \"" << partId << "\".", LogSeverity::Error);
+            return false;
+        }
+        return true;
+    }
+
+    bool checkLayout(const std::string& layoutId, const std::string& parentDesc) const
+    {
+        auto it = mnxLayoutList.find(layoutId);
+        if (it == mnxLayoutList.end()) {
+            logMessage(LogMsg() << parentDesc << " references non-existent layout \"" << layoutId << "\".", LogSeverity::Error);
+            return false;
+        }
+        return true;
+    }
+
 private:
     void logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity severity = LogSeverity::Info) const;
 };
@@ -159,7 +191,7 @@ inline bool nodeExists(json jsonData, const std::string_view& nodeName, bool req
 {
     bool retval = jsonData.contains(nodeName);
     if (required && !retval) {
-        throw std::invalid_argument("Validated JSON node does not contain required value " + std::string(nodeName) + '!');
+        throw std::invalid_argument("Validated JSON node does not contain required value \"" + std::string(nodeName) + "\"!");
     }
     return retval;
 }

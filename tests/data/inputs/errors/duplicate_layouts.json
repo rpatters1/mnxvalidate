@@ -1,0 +1,166 @@
+{
+    "mnx": {
+        "version": 1
+    },
+    "global": {
+        "measures": []
+    },
+    "parts": [
+        {
+            "id": "P1",
+            "name": "Organ",
+            "shortName": "Org.",
+            "staves": 3
+        },
+        {
+            "id": "P2",
+            "name": "Harpsichord 1",
+            "shortName": "Hpschd. 1",
+            "staves": 2
+        }
+    ],
+    "layouts": [
+        {
+            "id": "S0-ScrVw",
+            "content": [
+                {
+                    "type": "group",
+                    "content": [
+                        {
+                            "type": "group",
+                            "label": "Organ",
+                            "symbol": "brace",
+                            "content": [
+                                {
+                                    "type": "staff",
+                                    "sources": [
+                                        {
+                                            "part": "P1",
+                                            "staff": 1
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "staff",
+                                    "sources": [
+                                        {
+                                            "part": "P1",
+                                            "staff": 2
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P1",
+                                    "staff": 3
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "label": "Harpsichord 1",
+                    "symbol": "brace",
+                    "content": [
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P2",
+                                    "staff": 1,
+                                    "label": "RH"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P2",
+                                    "staff": 2,
+                                    "label": "LH"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "S0-ScrVw",
+            "content": [
+                {
+                    "type": "group",
+                    "content": [
+                        {
+                            "type": "group",
+                            "label": "Organ",
+                            "symbol": "brace",
+                            "content": [
+                                {
+                                    "type": "staff",
+                                    "sources": [
+                                        {
+                                            "part": "P1",
+                                            "staff": 1
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "staff",
+                                    "sources": [
+                                        {
+                                            "part": "P1",
+                                            "staff": 2
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P1",
+                                    "staff": 3
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "label": "Harpsichord 1",
+                    "symbol": "brace",
+                    "content": [
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P2",
+                                    "staff": 1,
+                                    "label": "RH"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P2",
+                                    "staff": 2,
+                                    "label": "LH"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
