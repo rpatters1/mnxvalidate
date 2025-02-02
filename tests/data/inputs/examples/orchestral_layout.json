@@ -3,7 +3,11 @@
        "version": 1
     },
     "global": {
-       "measures": []
+       "measures": [
+          {},
+          {},
+          {}
+       ]
     },
     "layouts": [
        {
@@ -283,43 +287,186 @@
     ],
     "parts": [
        {
+          "measures": [
+             {
+                "sequences": []
+             },
+             {
+                "sequences": []
+             },
+             {
+                "sequences": []
+             }
+          ],
           "id": "Klar1"
        },
        {
-          "id": "Klar2"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Klar2"
        },
        {
-          "id": "Klar3"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Klar3"
        },
        {
-          "id": "Horn1"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Horn1"
        },
        {
-          "id": "Horn2"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Horn2"
        },
        {
-          "id": "Horn3"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Horn3"
        },
        {
-          "id": "Horn4"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Horn4"
        },
        {
-          "id": "Harfe",
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Harfe",
           "staves": 2
        },
        {
-          "id": "Violin1"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Violin1"
        },
        {
-          "id": "Violin2"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Violin2"
        },
        {
-          "id": "Viola"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Viola"
        },
        {
-          "id": "Cello"
+         "measures": [
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            },
+            {
+               "sequences": []
+            }
+         ],
+         "id": "Cello"
        },
        {
+          "measures": [
+             {
+                "sequences": []
+             },
+             {
+                "sequences": []
+             },
+             {
+                "sequences": []
+             }
+          ],
           "id": "Kontra"
        }
     ],
@@ -335,7 +482,7 @@
                    },
                    {
                       "layout": "secondSystem",
-                      "measure": 7
+                      "measure": 3
                    }
                 ]
              }

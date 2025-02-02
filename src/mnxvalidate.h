@@ -112,6 +112,8 @@ public:
     bool schemaOnly{};
 
     mutable std::filesystem::path inputFilePath;
+    mutable std::map<int, size_t> mnxMeasureList; // key: measId; value: index of measure in global measure array
+    mutable size_t measCount{}; // can be different than mnxMeasureList.size() if there is a duplicate key error
     mutable std::unordered_set<std::string> mnxPartList;
     mutable std::unordered_set<std::string> mnxLayoutList;
 
@@ -178,8 +180,27 @@ public:
         return true;
     }
 
+    std::optional<size_t> getMeasureIndex(int measureId, const std::string& parentDesc) const
+    {
+        auto it = mnxMeasureList.find(measureId);
+        if (it == mnxMeasureList.end()) {
+            logMessage(LogMsg() << parentDesc << " references non-existent measure " << std::to_string(measureId) << ".", LogSeverity::Error);
+            return std::nullopt;
+        }
+        return it->second;
+    }
+
 private:
     void logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity severity = LogSeverity::Info) const;
+
+    void resetForFile(const std::filesystem::path& inpFile) const
+    {
+        inputFilePath = inpFile;
+        mnxMeasureList.clear();
+        measCount = 0;
+        mnxPartList.clear();
+        mnxLayoutList.clear();
+    }
 };
 
 std::string getTimeStamp(const std::string& fmt);
