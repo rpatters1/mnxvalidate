@@ -1,0 +1,36 @@
+{
+    "mnx": {
+        "version": 1
+    },
+    "global": {
+        "measures": [
+            {
+                "index": 1
+            },
+            {},
+            {}
+        ]
+    },
+    "parts": [
+        {
+            "id": "P1",
+            "name": "Harpsichord 1",
+            "shortName": "Hpschd. 1",
+            "staves": 2,
+            "measures": [
+                {
+                   "sequences": []
+                },
+                {
+                   "sequences": []
+                },
+                {
+                   "sequences": []
+                },
+                {
+                   "sequences": []
+                }
+            ]
+        }
+    ]
+}

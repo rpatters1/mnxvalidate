@@ -260,11 +260,7 @@ static void validateGlobal(json jsonData, const MnxValidateContext& context)
             for (size_t x = 0; x < global["measures"].size(); x++) {
                 const auto& meas = global["measures"][x];
                 context.measCount++;
-                if (meas.contains("index")) {
-                    measureId = meas["index"].get<int>();
-                } else {
-                    measureId++;
-                }
+                measureId = meas.contains("index") ? meas["index"].get<int>() : measureId + 1;
                 auto it = context.mnxMeasureList.find(measureId);
                 if (it == context.mnxMeasureList.end()) {
                     context.mnxMeasureList.emplace(measureId, x);

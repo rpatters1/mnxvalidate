@@ -38,3 +38,13 @@ TEST(Parts, DuplicateId)
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
+
+TEST(Parts, MeasuresMismatch)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "measures_mismatch.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("measures_mismatch.json"), "contains a different number of measures (4) than are defined globally (3)" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}

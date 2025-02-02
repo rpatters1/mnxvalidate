@@ -12,6 +12,7 @@ if(mnxvalidate_BUILD_TESTING)
     add_executable(mnxvalidate_tests
         mnxvalidatetests.cpp
         test_examples.cpp
+        test_global.cpp
         test_layouts.cpp
         test_parts.cpp
         test_schema.cpp

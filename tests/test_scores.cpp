@@ -68,3 +68,7 @@ TEST(Scores, InvalidScoreLayoutChangeLayoutId)
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
+
+// MultimeasureRestStart
+// MultimeasureRestSpan
+// SystemStartMeasure
