@@ -295,10 +295,7 @@ static void validateParts(json jsonData, const MnxValidateContext& context)
                 }
                 partName = " \"" + partName + "\"";
             }
-            size_t numMeasures = 0;
-            if (part.contains("measures")) {
-                numMeasures = part["measures"].size();
-            }
+            size_t numMeasures = part.contains("measures") ? part["measures"].size() : 0;
             if (numMeasures != context.measCount) {
                 context.logMessage(LogMsg() << "Part" << partName << " contains a different number of measures (" + std::to_string(numMeasures)
                         + ") than are defined globally (" + std::to_string(context.measCount) + ").", LogSeverity::Error);
@@ -353,8 +350,7 @@ static void validateLayouts(json jsonData, const MnxValidateContext& context)
                                                         << std::to_string(staffNum) << ") for part " << source["part"] << ".", LogSeverity::Error);
                                                 valid = false;
                                             }
-                                        }
-                                        else {
+                                        } else {
                                             valid = false;
                                         }
                                     }                                    
