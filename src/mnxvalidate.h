@@ -28,7 +28,8 @@
 #include <optional>
 #include <fstream>
 #include <functional>
-#include <unordered_set>
+#include <map>
+#include <unordered_map>
 
 #include "utils/stringutils.h"
 #include "nlohmann/json.hpp"
@@ -114,8 +115,8 @@ public:
     mutable std::filesystem::path inputFilePath;
     mutable std::map<int, size_t> mnxMeasureList; // key: measId; value: index of measure in global measure array
     mutable size_t measCount{}; // can be different than mnxMeasureList.size() if there is a duplicate key error
-    mutable std::unordered_set<std::string> mnxPartList;
-    mutable std::unordered_set<std::string> mnxLayoutList;
+    mutable std::unordered_map<std::string, size_t> mnxPartList;
+    mutable std::unordered_map<std::string, size_t> mnxLayoutList;
 
 #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
     bool testOutput{};
@@ -148,11 +149,11 @@ public:
 #endif
     }
 
-    bool addKey(const std::string& key, std::unordered_set<std::string>& keySet, const std::string& setDescription) const
+    bool addKey(const std::string& key, std::unordered_map<std::string, size_t>& keySet, size_t index, const std::string& setDescription) const
     {
         auto it = keySet.find(key);
         if (it == keySet.end()) {
-            keySet.insert(key);
+            keySet.emplace(key, index);
             return true;
         } else {
             logMessage(LogMsg() << "more than one " << setDescription << " with id \"" << key << "\" exists.", LogSeverity::Error);
@@ -160,24 +161,24 @@ public:
         return false;
     }
 
-    bool checkPart(const std::string& partId, const std::string& parentDesc) const
+    std::optional<size_t> getPartIndex(const std::string& partId, const std::string& parentDesc) const
     {
         auto it = mnxPartList.find(partId);
         if (it == mnxPartList.end()) {
             logMessage(LogMsg() << parentDesc << " references non-existent part \"" << partId << "\".", LogSeverity::Error);
-            return false;
+            return std::nullopt;
         }
-        return true;
+        return it->second;
     }
 
-    bool checkLayout(const std::string& layoutId, const std::string& parentDesc) const
+    std::optional<size_t> getLayoutIndex(const std::string& layoutId, const std::string& parentDesc) const
     {
         auto it = mnxLayoutList.find(layoutId);
         if (it == mnxLayoutList.end()) {
             logMessage(LogMsg() << parentDesc << " references non-existent layout \"" << layoutId << "\".", LogSeverity::Error);
-            return false;
+            return std::nullopt;
         }
-        return true;
+        return it->second;
     }
 
     std::optional<size_t> getMeasureIndex(int measureId, const std::string& parentDesc) const

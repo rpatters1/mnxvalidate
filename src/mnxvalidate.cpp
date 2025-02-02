@@ -290,7 +290,7 @@ static void validateParts(json jsonData, const MnxValidateContext& context)
             std::string partName = "[" + std::to_string(x) + "]";
             if (part.contains("id")) {
                 partName = part["id"];
-                if (!context.addKey(partName, context.mnxPartList, "part")) {
+                if (!context.addKey(partName, context.mnxPartList, x, "part")) {
                     valid = false;
                 }
                 partName = " \"" + partName + "\"";
@@ -318,9 +318,10 @@ static void validateLayouts(json jsonData, const MnxValidateContext& context)
         if (!jsonData["layouts"].is_array()) {
             throw std::invalid_argument("Layouts node in validated JSON is not an array!");
         }
-        for (const auto& layout : jsonData["layouts"]) {
+        for (size_t x = 0; x < jsonData["layouts"].size(); x++) {
+            const auto& layout = jsonData["layouts"][x];
             if (nodeExists(layout, "id")) {
-                if (!context.addKey(layout["id"], context.mnxLayoutList, "layout")) {
+                if (!context.addKey(layout["id"], context.mnxLayoutList, x, "layout")) {
                     valid = false;
                 }
             }
@@ -343,10 +344,20 @@ static void validateLayouts(json jsonData, const MnxValidateContext& context)
                                 }
                                 for (const auto& source : element["sources"]) {
                                     if (nodeExists(source, "part")) {
-                                        if (!context.checkPart(source["part"], "Layout " + layout["id"].dump())) {
+                                        if (auto index = context.getPartIndex(source["part"], "Layout " + layout["id"].dump())) {
+                                            int staffNum = source.contains("staff") ? source["staff"].get<int>() : 1;
+                                            const auto& part = jsonData["parts"][*index];
+                                            int numStaves = part.contains("staves") ? part["staves"].get<int>() : 1;
+                                            if (staffNum > numStaves || staffNum < 1) {
+                                                context.logMessage(LogMsg() << "Layout " << layout["id"].dump() << "has invalid staff number ("
+                                                        << std::to_string(staffNum) << ") for part " << source["part"] << ".", LogSeverity::Error);
+                                                valid = false;
+                                            }
+                                        }
+                                        else {
                                             valid = false;
                                         }
-                                    }
+                                    }                                    
                                     /// @todo validate "labelref"?
                                     /// @todo validate "voice"?
                                 }
@@ -374,7 +385,7 @@ static void validateScores(json jsonData, const MnxValidateContext& context)
         }
         for (const auto& score : jsonData["scores"]) {
             if (score.contains("layout")) {
-                if (!context.checkLayout(score["layout"], "Score " + score["name"].dump())) {
+                if (!context.getLayoutIndex(score["layout"], "Score " + score["name"].dump())) {
                     valid = false;
                 }
             }
@@ -395,7 +406,7 @@ static void validateScores(json jsonData, const MnxValidateContext& context)
                 for (size_t x = 0; x < score["pages"].size(); x++) {
                     const auto& page = score["pages"][x];
                     if (page.contains("layout")) {
-                        if (!context.checkLayout(page["layout"], "Page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                        if (!context.getLayoutIndex(page["layout"], "Page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
                             valid = false;
                         }
                     }
@@ -403,7 +414,7 @@ static void validateScores(json jsonData, const MnxValidateContext& context)
                         for (size_t y = 0; y < page["systems"].size(); y++) {
                             const auto& system = page["systems"][y];
                             if (system.contains("layout")) {
-                                if (!context.checkLayout(system["layout"], "System[" + std::to_string(y)
+                                if (!context.getLayoutIndex(system["layout"], "System[" + std::to_string(y)
                                             + "] in page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
                                     valid = false;
                                 }
@@ -416,7 +427,7 @@ static void validateScores(json jsonData, const MnxValidateContext& context)
                                 for (size_t z = 0; z < system["layoutChanges"].size(); z++) {
                                     const auto& layoutChange = system["layoutChanges"][z];
                                     if (nodeExists(layoutChange, "layout")) { // "layout" is required
-                                        if (!context.checkLayout(layoutChange["layout"], "Layout change[" + std::to_string(z) + "] in system[" + std::to_string(y)
+                                        if (!context.getLayoutIndex(layoutChange["layout"], "Layout change[" + std::to_string(z) + "] in system[" + std::to_string(y)
                                                     + "] in page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
                                             valid = false;
                                         }
