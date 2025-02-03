@@ -28,9 +28,11 @@
 #include <optional>
 #include <fstream>
 #include <functional>
-
+#include <map>
+#include <unordered_map>
 
 #include "utils/stringutils.h"
+#include "nlohmann/json.hpp"
 
 inline constexpr char MNX_EXTENSION[]       = "mnx";
 inline constexpr char JSON_EXTENSION[]      = "json";
@@ -46,17 +48,6 @@ inline constexpr char JSON_EXTENSION[]      = "json";
 #endif
 
 namespace mnxvalidate {
-
-// This function exists as std::to_array in C++20
-template <typename T, std::size_t N>
-inline constexpr std::array<T, N> to_array(const T(&arr)[N])
-{
-    std::array<T, N> result{};
-    for (std::size_t i = 0; i < N; ++i) {
-        result[i] = arr[i];
-    }
-    return result;
-}
 
 #ifdef _WIN32
 using arg_view = std::wstring_view;
@@ -85,6 +76,7 @@ using arg_string = std::string;
 
 using Buffer = std::vector<char>;
 using LogMsg = std::stringstream;
+using json = nlohmann::json;
 
 /// @brief defines log message severity
 enum class LogSeverity
@@ -118,10 +110,15 @@ public:
 
     std::optional<std::filesystem::path> mnxSchemaPath;
     std::optional<std::string> mnxSchema;
+    bool schemaOnly{};
 
     mutable std::filesystem::path inputFilePath;
+    mutable std::map<int, size_t> mnxMeasureList; // key: measId; value: index of measure in global measure array
+    mutable size_t measCount{}; // can be different than mnxMeasureList.size() if there is a duplicate key error
+    mutable std::unordered_map<std::string, size_t> mnxPartList;
+    mutable std::unordered_map<std::string, size_t> mnxLayoutList;
 
- #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
+#ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
     bool testOutput{};
 #endif
 
@@ -152,14 +149,74 @@ public:
 #endif
     }
 
+    bool addKey(const std::string& key, std::unordered_map<std::string, size_t>& keySet, size_t index, const std::string& setDescription) const
+    {
+        auto it = keySet.find(key);
+        if (it == keySet.end()) {
+            keySet.emplace(key, index);
+            return true;
+        } else {
+            logMessage(LogMsg() << "more than one " << setDescription << " with id \"" << key << "\" exists.", LogSeverity::Error);
+        }
+        return false;
+    }
+
+    std::optional<size_t> getPartIndex(const std::string& partId, const std::string& parentDesc) const
+    {
+        auto it = mnxPartList.find(partId);
+        if (it == mnxPartList.end()) {
+            logMessage(LogMsg() << parentDesc << " references non-existent part \"" << partId << "\".", LogSeverity::Error);
+            return std::nullopt;
+        }
+        return it->second;
+    }
+
+    std::optional<size_t> getLayoutIndex(const std::string& layoutId, const std::string& parentDesc) const
+    {
+        auto it = mnxLayoutList.find(layoutId);
+        if (it == mnxLayoutList.end()) {
+            logMessage(LogMsg() << parentDesc << " references non-existent layout \"" << layoutId << "\".", LogSeverity::Error);
+            return std::nullopt;
+        }
+        return it->second;
+    }
+
+    std::optional<size_t> getMeasureIndex(int measureId, const std::string& parentDesc) const
+    {
+        auto it = mnxMeasureList.find(measureId);
+        if (it == mnxMeasureList.end()) {
+            logMessage(LogMsg() << parentDesc << " references non-existent measure " << std::to_string(measureId) << ".", LogSeverity::Error);
+            return std::nullopt;
+        }
+        return it->second;
+    }
+
 private:
     void logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity severity = LogSeverity::Info) const;
+
+    void resetForFile(const std::filesystem::path& inpFile) const
+    {
+        inputFilePath = inpFile;
+        mnxMeasureList.clear();
+        measCount = 0;
+        mnxPartList.clear();
+        mnxLayoutList.clear();
+    }
 };
 
 std::string getTimeStamp(const std::string& fmt);
 
 bool createDirectoryIfNeeded(const std::filesystem::path& path);
 void showAboutPage();
+
+inline bool nodeExists(json jsonData, const std::string_view& nodeName, bool required = true)
+{
+    bool retval = jsonData.contains(nodeName);
+    if (required && !retval) {
+        throw std::invalid_argument("Validated JSON node does not contain required value \"" + std::string(nodeName) + "\"!");
+    }
+    return retval;
+}
 
 } // namespace mnxvalidate
 

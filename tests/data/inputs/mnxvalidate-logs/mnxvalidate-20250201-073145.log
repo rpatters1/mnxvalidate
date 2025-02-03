@@ -1,0 +1,22 @@
+[2025-02-01 07:31:45] ======= START =======
+[2025-02-01 07:31:45] mnxvalidate executed with the following arguments:
+[2025-02-01 07:31:45] mnxvalidate /Volumes/RGP Data Drive/Robert Folder/Robert/Dev Projects (XCode, Lazarus)/mnx/mnxvalidate/tests/data/inputs/generic_nonascii_其れ.json --schema --schema-only /Volumes/RGP Data Drive/Robert Folder/Robert/Dev Projects (XCode, Lazarus)/mnx/mnxvalidate/tests/data/inputs/generic_schema.json 
+[2025-02-01 07:31:45] 
+[2025-02-01 07:31:45] ======================================================================================================================================================
+[2025-02-01 07:31:45] Processing File: /Volumes/RGP Data Drive/Robert Folder/Robert/Dev Projects (XCode, Lazarus)/mnx/mnxvalidate/tests/data/inputs/generic_nonascii_其れ.json
+[2025-02-01 07:31:45] ======================================================================================================================================================
+[2025-02-01 07:31:45] generic_nonascii_其れ.json Validate JSON /Volumes/RGP Data Drive/Robert Folder/Robert/Dev Projects (XCode, Lazarus)/mnx/mnxvalidate/tests/data/inputs/generic_nonascii_其れ.json
+[2025-02-01 07:31:45] generic_nonascii_其れ.json [***ERROR***] Invalid argument: At  of {"age":34,"email":"john.smith@example.com","isActive":false,"name":"John Smith","tags":["manager","mentor"]} - required property 'global' not found in object
+
+[2025-02-01 07:31:45] generic_nonascii_其れ.json [***ERROR***] generic_nonascii_其れ.json is not valid against the MNX schema.
+[2025-02-01 07:31:45] 
+[2025-02-01 07:31:45] =================================================================================================================================================
+[2025-02-01 07:31:45] Processing File: /Volumes/RGP Data Drive/Robert Folder/Robert/Dev Projects (XCode, Lazarus)/mnx/mnxvalidate/tests/data/inputs/generic_schema.json
+[2025-02-01 07:31:45] =================================================================================================================================================
+[2025-02-01 07:31:45] generic_schema.json Validate JSON /Volumes/RGP Data Drive/Robert Folder/Robert/Dev Projects (XCode, Lazarus)/mnx/mnxvalidate/tests/data/inputs/generic_schema.json
+[2025-02-01 07:31:45] generic_schema.json [***ERROR***] Invalid argument: At  of {"$defs":{"person":{"additionalProperties":false,"properties":{"age":{"description":"The age of the person in years.","minimum":0,"type":"integer"},"email":{"description":"The email address of the person.","type":"string"},"isActive":{"description":"Indicates if the person is currently active.","type":"boolean"},"name":{"description":"The name of the person.","type":"string"},"tags":{"description":"A list of tags associated with the person.","items":{"type":"string"},"type":"array"}},"required":["name","email"],"type":"object"}},"$ref":"#/$defs/person","$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"} - required property 'global' not found in object
+
+[2025-02-01 07:31:45] generic_schema.json [***ERROR***] generic_schema.json is not valid against the MNX schema.
+[2025-02-01 07:31:45] 
+[2025-02-01 07:31:45] mnxvalidate processing complete
+[2025-02-01 07:31:45] ======== END ========

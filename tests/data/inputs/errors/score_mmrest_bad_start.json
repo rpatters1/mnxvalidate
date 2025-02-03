@@ -1,0 +1,34 @@
+{
+    "mnx": {
+        "version": 1
+    },
+    "global": {
+        "measures": [
+            {}
+        ]
+    },
+    "parts": [
+        {
+            "id": "P2",
+            "name": "Harpsichord 1",
+            "shortName": "Hpschd. 1",
+            "staves": 2,
+            "measures": [
+                {
+                    "sequences": []
+                }
+            ]
+        }
+    ],
+    "scores": [
+        {            
+            "name": "Score",
+            "multimeasureRests": [
+                {
+                    "start": 3,
+                    "duration": 1
+                }
+            ]
+        }
+    ]
+}

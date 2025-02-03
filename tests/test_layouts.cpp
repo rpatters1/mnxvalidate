@@ -29,42 +29,32 @@
 
 using namespace mnxvalidate;
 
-TEST(Schema, InputSchemaValid)
+TEST(Layouts, DuplicateId)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / utils::utf8ToPath("generic_nonascii_其れ.json");
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string(), "--schema-only" };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
-        EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
-    });
-}
-
-TEST(Schema, InputSchemaNotValid)
-{
-    setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / "valid.mnx";
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
+    std::filesystem::path inputPath = getInputPath() / "errors" / "duplicate_layouts.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("duplicate_layouts.json"), "more than one layout with id \"S0-ScrVw\"" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
 
-TEST(Schema, EmbeddedSchemaValid)
+TEST(Layouts, NonexistentPartId)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / "valid.mnx";
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
-        EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "layout_with_bad_part.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("layout_with_bad_part.json"), "\"S0-ScrVw\" references non-existent part \"P-does-not-exist\"" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
 
-TEST(Schema, EmbeddedSchemaNotValid)
+TEST(Layouts, NonexistentStaffNumber)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / utils::utf8ToPath("generic_nonascii_其れ.json");
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
+    std::filesystem::path inputPath = getInputPath() / "errors" / "layout_invalid_staffnum.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("layout_invalid_staffnum.json"), "Layout \"badStaff\" references non-existent part \"P2\"" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }

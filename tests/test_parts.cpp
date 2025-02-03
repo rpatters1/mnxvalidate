@@ -29,42 +29,22 @@
 
 using namespace mnxvalidate;
 
-TEST(Schema, InputSchemaValid)
+TEST(Parts, DuplicateId)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / utils::utf8ToPath("generic_nonascii_其れ.json");
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string(), "--schema-only" };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
-        EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
-    });
-}
-
-TEST(Schema, InputSchemaNotValid)
-{
-    setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / "valid.mnx";
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
+    std::filesystem::path inputPath = getInputPath() / "errors" / "duplicate_parts.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("duplicate_parts.json"), "more than one part with id \"P1\"" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
 
-TEST(Schema, EmbeddedSchemaValid)
+TEST(Parts, MeasuresMismatch)
 {
     setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / "valid.mnx";
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
-        EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
-    });
-}
-
-TEST(Schema, EmbeddedSchemaNotValid)
-{
-    setupTestDataPaths();
-    std::filesystem::path inputPath = getInputPath() / utils::utf8ToPath("generic_nonascii_其れ.json");
-    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
+    std::filesystem::path inputPath = getInputPath() / "errors" / "measures_mismatch.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("measures_mismatch.json"), "contains a different number of measures (4) than are defined globally (3)" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }

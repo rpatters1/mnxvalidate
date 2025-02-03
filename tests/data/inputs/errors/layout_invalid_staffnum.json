@@ -1,0 +1,69 @@
+{
+    "mnx": {
+        "version": 1
+    },
+    "global": {
+        "measures": [
+            {},
+            {},
+            {},
+            {}
+        ]
+    },
+    "parts": [
+        {
+            "id": "P1",
+            "name": "Harpsichord 1",
+            "shortName": "Hpschd. 1",
+            "staves": 2,
+            "measures": [
+                {
+                   "sequences": []
+                },
+                {
+                   "sequences": []
+                },
+                {
+                   "sequences": []
+                },
+                {
+                   "sequences": []
+                }
+            ]
+        }
+    ],
+    "layouts": [
+        {
+            "id": "badStaff",
+            "content": [
+            {
+                    "type": "group",
+                    "label": "Harpsichord 1",
+                    "symbol": "brace",
+                    "content": [
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P1",
+                                    "staff": 1,
+                                    "label": "RH"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "staff",
+                            "sources": [
+                                {
+                                    "part": "P2",
+                                    "staff": 3,
+                                    "label": "LH"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

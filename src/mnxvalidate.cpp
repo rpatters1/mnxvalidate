@@ -23,7 +23,6 @@
 
 #include "mnxvalidate.h"
 
-#include "nlohmann/json.hpp"
 #include "nlohmann/json-schema.hpp"
 #include "mnx_schema.xxd"
 
@@ -65,6 +64,8 @@ std::vector<const arg_char*> MnxValidateContext::parseOptions(int argc, arg_char
             if (!schemaPath.empty()) {
                 mnxSchemaPath = schemaPath;
             }
+        } else if (next == _ARG("--schema-only")) {
+            schemaOnly = true;
 #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
         } else if (next == _ARG("--testing")) {
             testOutput = true;
@@ -132,7 +133,7 @@ void MnxValidateContext::logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity s
         DWORD consoleMode{};
         if (::GetConsoleMode(hConsole, &consoleMode)) {
             std::wstringstream wMsg;
-            wMsg << utils::stringToWstring(msg.str()) << std::endl;
+            wMsg << utils::stringToWstring(inputFile + getSeverityStr() + msg.str()) << std::endl;
             DWORD written{};
             if (::WriteConsoleW(hConsole, wMsg.str().data(), static_cast<DWORD>(wMsg.str().size()), &written, nullptr)) {
                 return;
@@ -142,7 +143,7 @@ void MnxValidateContext::logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity s
     }
     std::wcerr << utils::stringToWstring(msg.str()) << std::endl;
 #else
-    std::cerr << msg.str() << std::endl;
+    std::cerr << inputFile << getSeverityStr() << msg.str() << std::endl;
 #endif
 }
 
@@ -213,16 +214,16 @@ void MnxValidateContext::endLogging()
     }
 }
 
-static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath, const MnxValidateContext& mnxValidateContext)
+static std::pair<bool, json> validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath, const MnxValidateContext& context)
 {
     static const std::string_view MNX_SCHEMA(reinterpret_cast<const char *>(mnx_schema_json), mnx_schema_json_len);
 
-    mnxValidateContext.logMessage(LogMsg() << "Validate JSON " << jsonFilePath.u8string());
+    json jsonData;
     try {
         // Load JSON schema
-        nlohmann::json schemaJson = mnxValidateContext.mnxSchema.has_value()
-                                  ? nlohmann::json::parse(mnxValidateContext.mnxSchema.value())
-                                  : nlohmann::json::parse(MNX_SCHEMA);
+        json schemaJson = context.mnxSchema.has_value()
+                        ? json::parse(context.mnxSchema.value())
+                        : json::parse(MNX_SCHEMA);
         nlohmann::json_schema::json_validator validator;
         validator.set_root_schema(schemaJson);
 
@@ -233,20 +234,209 @@ static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath,
         if (!jsonFile.is_open()) {
             throw std::runtime_error("Unable to open JSON file: " + jsonFilePath.u8string());
         }
-        nlohmann::json jsonData;
         jsonFile >> jsonData;
 
         // Validate JSON
         validator.validate(jsonData);
-        mnxValidateContext.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is valid against the MNX schema.");
-        return true;
-    } catch (const nlohmann::json::exception& e) {
-        mnxValidateContext.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
+        context.logMessage(LogMsg() << "is valid against the MNX schema.");
+        return std::make_pair(true, jsonData);
+    } catch (const json::exception& e) {
+        context.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
     } catch (const std::invalid_argument& e) {
-        mnxValidateContext.logMessage(LogMsg() << "Invalid argument: " << e.what(), LogSeverity::Error);
+        context.logMessage(LogMsg() << "Invalid argument: " << e.what(), LogSeverity::Error);
     }
-    mnxValidateContext.logMessage(LogMsg() << jsonFilePath.filename().u8string() << " is not valid against the MNX schema.", LogSeverity::Error);
-    return false;
+    context.logMessage(LogMsg() << " is not valid against the MNX schema.", LogSeverity::Error);
+    return std::make_pair(false, jsonData);
+}
+
+static void validateGlobal(json jsonData, const MnxValidateContext& context)
+{
+    bool valid = true;
+    if (nodeExists(jsonData, "global")) {
+        const auto& global = jsonData["global"];
+        if (nodeExists(global, "measures")) {
+            int measureId = 0;
+            context.measCount = 0;
+            for (size_t x = 0; x < global["measures"].size(); x++) {
+                const auto& meas = global["measures"][x];
+                context.measCount++;
+                measureId = meas.contains("index") ? meas["index"].get<int>() : measureId + 1;
+                auto it = context.mnxMeasureList.find(measureId);
+                if (it == context.mnxMeasureList.end()) {
+                    context.mnxMeasureList.emplace(measureId, x);
+                } else {
+                    context.logMessage(LogMsg() << "measure index " + std::to_string(measureId) + " is duplicated at location "
+                        + std::to_string(it->second) + " and " + std::to_string(x) + ".", LogSeverity::Error);
+                    valid = false;
+                }
+            }
+        }
+    }
+    if (valid) {
+        context.logMessage(LogMsg() << "validated global data.");
+    }
+}
+
+static void validateParts(json jsonData, const MnxValidateContext& context)
+{
+    bool valid = true;
+    if (nodeExists(jsonData, "parts")) {
+        for (size_t x = 0; x < jsonData["parts"].size(); x++) {
+            const auto& part = jsonData["parts"][x];
+            std::string partName = "[" + std::to_string(x) + "]";
+            if (part.contains("id")) {
+                partName = part["id"];
+                if (!context.addKey(partName, context.mnxPartList, x, "part")) {
+                    valid = false;
+                }
+                partName = " \"" + partName + "\"";
+            }
+            size_t numMeasures = part.contains("measures") ? part["measures"].size() : 0;
+            if (numMeasures != context.measCount) {
+                context.logMessage(LogMsg() << "Part" << partName << " contains a different number of measures (" + std::to_string(numMeasures)
+                        + ") than are defined globally (" + std::to_string(context.measCount) + ").", LogSeverity::Error);
+                valid = false;
+            }
+        }
+    }
+    if (valid) {
+        context.logMessage(LogMsg() << "validated all parts.");
+    }
+}
+
+static void validateLayouts(json jsonData, const MnxValidateContext& context)
+{
+    bool valid = true;
+    if (nodeExists(jsonData, "layouts", false)) {  // layouts are *not* required in MNX
+        if (!jsonData["layouts"].is_array()) {
+            throw std::invalid_argument("Layouts node in validated JSON is not an array!");
+        }
+        for (size_t x = 0; x < jsonData["layouts"].size(); x++) {
+            const auto& layout = jsonData["layouts"][x];
+            if (nodeExists(layout, "id")) {
+                if (!context.addKey(layout["id"], context.mnxLayoutList, x, "layout")) {
+                    valid = false;
+                }
+            }
+            auto validateContent = [&](json content, auto&& validateContent) -> void {
+                if (!content.is_array()) {
+                    throw std::invalid_argument("Layout content node in validated JSON is not an array!");
+                }
+                for (const auto& element : content) {
+                    if (nodeExists(element, "type")) {
+                        if (element["type"] == "group") {
+                            if (nodeExists(element, "content")) {
+                                validateContent(element["content"], validateContent);
+                            }
+                        }
+                        else if (element["type"] == "staff") {
+                            /// @todo validate "labelref"?
+                            if (nodeExists(element, "sources")) {
+                                if (!content.is_array()) {
+                                    throw std::invalid_argument("Staff sources node in validated JSON is not an array!");
+                                }
+                                for (const auto& source : element["sources"]) {
+                                    if (nodeExists(source, "part")) {
+                                        if (auto index = context.getPartIndex(source["part"], "Layout " + layout["id"].dump())) {
+                                            int staffNum = source.contains("staff") ? source["staff"].get<int>() : 1;
+                                            const auto& part = jsonData["parts"][*index];
+                                            int numStaves = part.contains("staves") ? part["staves"].get<int>() : 1;
+                                            if (staffNum > numStaves || staffNum < 1) {
+                                                context.logMessage(LogMsg() << "Layout " << layout["id"].dump() << "has invalid staff number ("
+                                                        << std::to_string(staffNum) << ") for part " << source["part"] << ".", LogSeverity::Error);
+                                                valid = false;
+                                            }
+                                        } else {
+                                            valid = false;
+                                        }
+                                    }                                    
+                                    /// @todo validate "labelref"?
+                                    /// @todo validate "voice"?
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            if (nodeExists(layout, "content")) {
+                validateContent(layout["content"], validateContent);
+            }
+        }
+    }
+    if (valid) {
+        context.logMessage(LogMsg() << "validated all layouts.");
+    }
+}
+
+static void validateScores(json jsonData, const MnxValidateContext& context)
+{
+    bool valid = true;
+    if (nodeExists(jsonData, "scores", false)) {  // scores are *not* required in MNX
+        if (!jsonData["scores"].is_array()) {
+            throw std::invalid_argument("Scores node in validated JSON is not an array!");
+        }
+        for (const auto& score : jsonData["scores"]) {
+            if (score.contains("layout")) {
+                if (!context.getLayoutIndex(score["layout"], "Score " + score["name"].dump())) {
+                    valid = false;
+                }
+            }
+            if (score.contains("multimeasureRests")) {
+                for (const auto& mmRest : score["multimeasureRests"]) {
+                    if (auto index = context.getMeasureIndex(mmRest["start"],"Multimeasure rest in score " + score["name"].dump())) {
+                        if (*index + mmRest["duration"].get<size_t>() >= context.measCount) {
+                            context.logMessage(LogMsg() << "Multimeasure rest at measure " + std::to_string(mmRest["start"].get<int>()) + " in score "
+                                + score["name"].dump() + " spans non-existent measures.", LogSeverity::Error);
+                            valid = false;
+                        }
+                    } else {
+                        valid = false;
+                    }
+                }
+            }
+            if (score.contains("pages")) {
+                for (size_t x = 0; x < score["pages"].size(); x++) {
+                    const auto& page = score["pages"][x];
+                    if (page.contains("layout")) {
+                        if (!context.getLayoutIndex(page["layout"], "Page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                            valid = false;
+                        }
+                    }
+                    if (nodeExists(page, "systems")) { // "systems" is required
+                        for (size_t y = 0; y < page["systems"].size(); y++) {
+                            const auto& system = page["systems"][y];
+                            if (system.contains("layout")) {
+                                if (!context.getLayoutIndex(system["layout"], "System[" + std::to_string(y)
+                                            + "] in page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                                    valid = false;
+                                }
+                            }
+                            if (!context.getMeasureIndex(system["measure"], "System[" + std::to_string(y)
+                                            + "] in page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                                valid = false;
+                            }
+                            if (system.contains("layoutChanges")) {
+                                for (size_t z = 0; z < system["layoutChanges"].size(); z++) {
+                                    const auto& layoutChange = system["layoutChanges"][z];
+                                    if (nodeExists(layoutChange, "layout")) { // "layout" is required
+                                        if (!context.getLayoutIndex(layoutChange["layout"], "Layout change[" + std::to_string(z) + "] in system[" + std::to_string(y)
+                                                    + "] in page[" + std::to_string(x) + "] in score " + score["name"].dump())) {
+                                            valid = false;
+                                        }
+                                        /// @todo validate location.bar
+                                        /// @todo perhaps eventually flag location.position.fraction if it is too large for the measure
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (valid) {
+        context.logMessage(LogMsg() << "validated all scores.");
+    }
 }
 
 void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) const
@@ -263,10 +453,16 @@ void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) co
         logMessage(LogMsg() << delimiter, true);
         logMessage(LogMsg() << kProcessingMessage << inpFilePath.u8string(), true);
         logMessage(LogMsg() << delimiter, true);
-        this->inputFilePath = inpFilePath; // assign after logging the header
+        resetForFile(inpFilePath); // reset after logging the header
 
-        validateJsonAgainstSchema(inputFilePath, *this);
-
+        auto [success, jsonData] = validateJsonAgainstSchema(inputFilePath, *this);
+        if (success && !schemaOnly) {
+            // these calls are order-dependent
+            validateGlobal(jsonData, *this);
+            validateParts(jsonData, *this);
+            validateLayouts(jsonData, *this);
+            validateScores(jsonData, *this);
+        }
     } catch (const std::exception& e) {
         logMessage(LogMsg() << e.what(), true, LogSeverity::Error);
     }

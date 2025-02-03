@@ -15,7 +15,9 @@
                 "count": 3,
                 "unit": 4
              }
-          }
+          },
+          {},
+          {}
        ]
     },
     "layouts": [
@@ -296,6 +298,12 @@
                       "voice": "Pedal"
                    }
                 ]
+             },
+             {
+                "sequences": []
+             },
+             {
+                "sequences": []
              }
           ],
           "staves": 3
@@ -327,7 +335,7 @@
                    },
                    {
                       "layout": "organ3StaffSplitOber",
-                      "measure": 6
+                      "measure": 3
                    }
                 ]
              }
