@@ -69,6 +69,32 @@ TEST(Scores, InvalidScoreLayoutChangeLayoutId)
     });
 }
 
-// MultimeasureRestStart
-// MultimeasureRestSpan
-// SystemStartMeasure
+TEST(Scores, InvalidMMRestStartMeasure)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "score_mmrest_bad_start.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("score_mmrest_bad_start.json"), "Multimeasure rest in score \"Score\" references non-existent measure 3" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}
+
+TEST(Scores, InvalidMMRestSpan)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "score_mmrest_bad_span.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("score_mmrest_bad_span.json"), "Multimeasure rest at measure 1 in score \"Score\" spans non-existent measures" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}
+
+TEST(Scores, InvalidSystemStartMeasure)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "score_system_bad_measure.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("score_system_bad_measure.json"), "System[0] in page[0] in score \"Score\" references non-existent measure 1" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}

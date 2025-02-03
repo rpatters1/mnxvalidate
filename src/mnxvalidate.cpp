@@ -372,7 +372,7 @@ static void validateScores(json jsonData, const MnxValidateContext& context)
 {
     bool valid = true;
     if (nodeExists(jsonData, "scores", false)) {  // scores are *not* required in MNX
-        if (!jsonData["layouts"].is_array()) {
+        if (!jsonData["scores"].is_array()) {
             throw std::invalid_argument("Scores node in validated JSON is not an array!");
         }
         for (const auto& score : jsonData["scores"]) {

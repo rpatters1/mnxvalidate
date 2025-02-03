@@ -1,0 +1,36 @@
+{
+    "mnx": {
+        "version": 1
+    },
+    "global": {
+        "measures": []
+    },
+    "parts": [
+        {
+            "id": "P1",
+            "name": "Organ",
+            "shortName": "Org.",
+            "staves": 3
+        },
+        {
+            "id": "P2",
+            "name": "Harpsichord 1",
+            "shortName": "Hpschd. 1",
+            "staves": 2
+        }
+    ],
+    "scores": [
+        {
+            "name": "Score",
+            "pages": [
+                {
+                    "systems": [
+                        {
+                            "measure": 1
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

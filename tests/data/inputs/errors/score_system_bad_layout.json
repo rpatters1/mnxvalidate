@@ -3,20 +3,32 @@
         "version": 1
     },
     "global": {
-        "measures": []
+        "measures": [
+            {}
+        ]
     },
     "parts": [
         {
             "id": "P1",
             "name": "Organ",
             "shortName": "Org.",
-            "staves": 3
+            "staves": 3,
+            "measures": [
+                {
+                    "sequences": []
+                }
+            ]
         },
         {
             "id": "P2",
             "name": "Harpsichord 1",
             "shortName": "Hpschd. 1",
-            "staves": 2
+            "staves": 2,
+            "measures": [
+                {
+                    "sequences": []
+                }
+            ]
         }
     ],
     "layouts": [
