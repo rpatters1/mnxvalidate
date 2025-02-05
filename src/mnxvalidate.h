@@ -79,24 +79,32 @@ using json = nlohmann::json;
 
 /// @class LogMsg
 /// @brief Stringstream class that allows rvalues to be streamed to logMessage
-class LogMsg : public std::stringstream {
+class LogMsg : public std::stringstream
+{
 public:
     using std::stringstream::stringstream;
 
-    // Custom Copy Constructor (to allow copying)
-    LogMsg(const LogMsg& other) : std::stringstream(other.str()) {}
+    // Copy Constructor
+    LogMsg(const LogMsg& other) : std::stringstream()
+    {
+        this->str(other.str());  // Copy the string content
+        this->setstate(other.rdstate());  // Copy stream state
+    }
 
     // Custom Copy Assignment Operator
-    LogMsg& operator=(const LogMsg& other) {
+    LogMsg& operator=(const LogMsg& other)
+    {
         if (this != &other) {
             this->str(other.str()); // Copy the string content
+            this->setstate(other.rdstate());  // Copy stream state
         }
         return *this;
     }
 
     // Perfectly forwarding operator<< to handle both lvalues and rvalues correctly
     template <typename T>
-    LogMsg&& operator<<(T&& value) {
+    LogMsg&& operator<<(T&& value)
+    {
         static_cast<std::stringstream&>(*this) << std::forward<T>(value);
         return std::move(*this);
     }
