@@ -85,7 +85,12 @@ std::string getTimeStamp(const std::string& fmt)
 #ifdef _WIN32
     localtime_s(&localTime, &time_t_now); // Windows
 #else
-    localtime_r(&time_t_now, &localTime); // Linux/Unix
+    std::tm* tmPtr = localtime(&time_t_now); // POSIX: localtime is thread-safe per thread
+    if (tmPtr) {
+        localTime = *tmPtr;
+    } else {
+        return {}; // Handle failure gracefully
+    }
 #endif
     std::ostringstream timestamp;
     timestamp << std::put_time(&localTime, fmt.c_str());

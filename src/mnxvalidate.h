@@ -75,8 +75,25 @@ using arg_string = std::string;
 #endif
 
 using Buffer = std::vector<char>;
-using LogMsg = std::stringstream;
 using json = nlohmann::json;
+
+/// @class LogMsg
+/// @brief Stringstream class that allows rvalues to be streamed to logMessage
+class LogMsg : public std::stringstream
+{
+public:
+    using std::stringstream::stringstream;
+
+    LogMsg(const LogMsg& src) : std::stringstream(src.str()) {}
+
+    // Override operator<< to return LogMsg&
+    template <typename T>
+    LogMsg&& operator<<(const T& value)
+    {
+        static_cast<std::stringstream&>(*this) << value;
+        return std::move(*this); // Ensure the return type is LogMsg&
+    }
+};
 
 /// @brief defines log message severity
 enum class LogSeverity

@@ -66,7 +66,7 @@ void checkStderr(const std::vector<std::string>& expectedMessages, std::function
                 << "Message \"" << expectedMessage << "\" not found. Actual: " << capturedErrors;
         }
     }
-};
+}
 
 void checkStdout(const std::vector<std::string>& expectedMessages, std::function<void()> callback)
 {
