@@ -32,7 +32,7 @@
 #include <unordered_map>
 
 #include "utils/stringutils.h"
-#include "nlohmann/json.hpp"
+#include "mnxdom.h"
 
 inline constexpr char MNX_EXTENSION[]       = "mnx";
 inline constexpr char JSON_EXTENSION[]      = "json";
@@ -136,6 +136,7 @@ public:
     bool schemaOnly{};
 
     mutable std::filesystem::path inputFilePath;
+    mutable std::unique_ptr<mnx::Document> mnxDoc;
     mutable std::map<int, size_t> mnxMeasureList; // key: measId; value: index of measure in global measure array
     mutable size_t measCount{}; // can be different than mnxMeasureList.size() if there is a duplicate key error
     mutable std::unordered_map<std::string, size_t> mnxPartList;

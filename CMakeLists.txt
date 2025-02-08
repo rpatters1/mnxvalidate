@@ -80,7 +80,6 @@ set(GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
 
 # Set output directory for compiled executable
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
-set(BUILD_TESTING OFF CACHE BOOL "Disable testing for external dependencies" FORCE)
 
 # Save the current state and disable deprecation warnings
 set(_original_WARN_DEPRECATED ${CMAKE_WARN_DEPRECATED})
@@ -97,30 +96,34 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(miniz-cpp)
 
-# Disable building tests for nlohmann_json
-set(JSON_BuildTests OFF CACHE BOOL "Do not build tests for nlohmann_json")
-# Define the version of nlohmann_json to use
-set(NLOHMANN_JSON_VERSION v3.11.3)
-# Fetch nlohmann_json
-FetchContent_Declare(
-    nlohmann_json
-    URL https://github.com/nlohmann/json/releases/download/${NLOHMANN_JSON_VERSION}/json.tar.xz
-    URL_HASH SHA256=d6c65aca6b1ed68e7a182f4757257b107ae403032760ed6ef121c9d55e81757d  # Verify the hash matches the tarball
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(nlohmann_json)
+# Optionally, let the development environment specify a local path
+option(MNXDOM_USE_LOCAL "Use local MNX C++ DOM checkout" OFF)
+if(MNXDOM_USE_LOCAL)
+    # Set this to the path where you are actively developing MNX C++ DOM.
+    set(MNXDOM_LOCAL_PATH "${CMAKE_SOURCE_DIR}/../mnxdom")
+    if(EXISTS "${MNXDOM_LOCAL_PATH}/CMakeLists.txt")
+        # Tell FetchContent to use the local directory instead of fetching from the remote repository.
+        message(STATUS "Local MNX C++ DOM found at ${MNXDOM_LOCAL_PATH}")
+        set(FETCHCONTENT_SOURCE_DIR_MNXDOM "${MNXDOM_LOCAL_PATH}" CACHE INTERNAL "")
+    else()
+        message(FATAL_ERROR "Local MNX C++ DOM not found at ${MNXDOM_LOCAL_PATH}")
+    endif()
+else()
+    message(STATUS "Using GitHub for MNX C++ DOM")
+endif()
 
-# Disable building tests for json_schema_validator
-set(JSON_VALIDATOR_BUILD_TESTS OFF CACHE BOOL "Do not build tests for json_schema_validator")
-# Fetch json_schema_validator from your fork
-set(nlohmann_json_VERSION ${NLOHMANN_JSON_VERSION})
+option(mnxdom_BUILD_TESTING "Enable testing mnxdom" ON)
+# Fetch mnxdom
 FetchContent_Declare(
-    json_schema_validator
-    GIT_REPOSITORY https://github.com/pboettch/json-schema-validator
-    GIT_TAG        40af3ec39670e768fc3f01f935140af311d71024
+    mnxdom
+    GIT_REPOSITORY https://github.com/rpatters1/mnxdom.git
+    GIT_TAG        dev/refactor-support
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
-FetchContent_MakeAvailable(json_schema_validator)
+FetchContent_MakeAvailable(mnxdom)
+
+FetchContent_GetProperties(mnxdom)
+message(STATUS "mnxdom Source Directory: ${mnxdom_SOURCE_DIR}")
 
 # Restore the original state
 set(CMAKE_WARN_DEPRECATED ${_original_WARN_DEPRECATED} CACHE BOOL "Restore original deprecation warnings setting" FORCE)
@@ -129,7 +132,6 @@ add_custom_target(PrintConfig ALL
     COMMAND ${CMAKE_COMMAND} -E echo "Active build configuration: $<CONFIG>"
 )
 
-include("${CMAKE_SOURCE_DIR}/cmake/GenerateMnxSchemaXxd.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/GenerateLicenseXxd.cmake")
 
 # Add executable target
@@ -158,7 +160,7 @@ set(MUSX_DISPLAY_NODE_NAMES ON CACHE BOOL "Write node names to std::cout as they
 #set(MUSX_THROW_ON_INTEGRITY_CHECK_FAIL ON CACHE BOOL "Enable throwing integrity check failures" FORCE)
 
 # Ensure the include directories are added
-add_dependencies(mnxvalidate GenerateMnxSchemaXxd GenerateLicenseXxd)
+add_dependencies(mnxvalidate GenerateLicenseXxd)
 target_include_directories(mnxvalidate PRIVATE  "${FETCHCONTENT_BASE_DIR}/ezgz-src")
 target_include_directories(mnxvalidate SYSTEM PRIVATE  "${FETCHCONTENT_BASE_DIR}/miniz-cpp-src")
 target_include_directories(mnxvalidate PRIVATE ${GENERATED_DIR})
@@ -166,8 +168,7 @@ target_include_directories(mnxvalidate PRIVATE ${MUSX_OBJECT_MODEL_DIR})
 target_include_directories(mnxvalidate PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # Ensure the libraries are added
-target_link_libraries(mnxvalidate PRIVATE nlohmann_json::nlohmann_json)
-target_link_libraries(mnxvalidate PRIVATE nlohmann_json_schema_validator)
+target_link_libraries(mnxvalidate PRIVATE mnxdom)
 
 # Define an interface library for precompiled headers
 add_library(mnxvalidate_pch INTERFACE)
@@ -178,6 +179,7 @@ target_precompile_headers(mnxvalidate_pch INTERFACE
     <functional>
     <string>
     <memory>
+    <mnxdom.h>
 )
 
 # Link the interface library to mnxvalidate

@@ -5,7 +5,7 @@
 set(LICENSE_FILES
     "${CMAKE_SOURCE_DIR}/LICENSE"
     "${nlohmann_json_SOURCE_DIR}/LICENSE.MIT"
-    "${json_schema_validator_SOURCE_DIR}/LICENSE"
+    "${nlohmann_json_schema_validator_SOURCE_DIR}/LICENSE"
     "${miniz-cpp_SOURCE_DIR}/LICENSE.md"
 )
 
@@ -29,6 +29,7 @@ foreach(INDEX RANGE 0 ${LAST_INDEX})
     list(GET LICENSE_FILES ${INDEX} LICENSE_FILE)
     list(GET LICENSE_PREFIXES ${INDEX} SAFE_NAME_PREFIX)
 
+    message(STATUS "Processing LICENSE_FILE: ${LICENSE_FILE}")
     set(GENERATED_XXD "${GENERATED_DIR}/${SAFE_NAME_PREFIX}_license.xxd")
     
     # Extract the directory of the license file
