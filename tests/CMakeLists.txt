@@ -44,8 +44,7 @@ if(mnxvalidate_BUILD_TESTING)
     # Link libraries used by mnxvalidate
     target_link_libraries(mnxvalidate_tests PRIVATE
         mnxvalidate_pch                   # Precompiled headers
-        nlohmann_json::nlohmann_json
-        nlohmann_json_schema_validator
+        mnxdom
     )
 
     # Define testing-specific preprocessor macro
@@ -75,4 +74,9 @@ if(mnxvalidate_BUILD_TESTING)
         EXTRA_ARGS --gtest_color=yes
     )
 
+    add_test(
+        NAME mnxdom_tests
+        COMMAND $<TARGET_FILE:mnxdom_tests>
+    )
+    
 endif()

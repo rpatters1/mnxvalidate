@@ -69,6 +69,11 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: cmake --build build --config Release
 
-      # Run Tests
-      - name: Run Tests
+      - name: Run Tests on Windows
+        if: runner.os == 'Windows'
+        run: ctest --test-dir build/tests -C Release --output-on-failure
+      
+      - name: Run Tests on Linux/macOS
+        if: runner.os != 'Windows'
         run: ctest --test-dir build/tests --output-on-failure
+      
