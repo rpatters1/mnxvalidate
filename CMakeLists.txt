@@ -96,17 +96,18 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(miniz-cpp)
 
-# Optionally, let the development environment specify a local path
-option(MNXDOM_USE_LOCAL "Use local MNX C++ DOM checkout" OFF)
-if(MNXDOM_USE_LOCAL)
-    # Set this to the path where you are actively developing MNX C++ DOM.
-    set(MNXDOM_LOCAL_PATH "${CMAKE_SOURCE_DIR}/../mnxdom")
-    if(EXISTS "${MNXDOM_LOCAL_PATH}/CMakeLists.txt")
-        # Tell FetchContent to use the local directory instead of fetching from the remote repository.
-        message(STATUS "Local MNX C++ DOM found at ${MNXDOM_LOCAL_PATH}")
-        set(FETCHCONTENT_SOURCE_DIR_MNXDOM "${MNXDOM_LOCAL_PATH}" CACHE INTERNAL "")
+# Define a cache variable for the local MNX C++ DOM path relative to the source directory.
+set(MNXDOM_LOCAL_PATH "" CACHE STRING "Path to local MNX C++ DOM checkout relative to the source directory (if provided)")
+
+if(MNXDOM_LOCAL_PATH)
+    # Combine the source directory with the relative path to get an absolute path.
+    get_filename_component(MNXDOM_LOCAL_PATH_ABS "${CMAKE_SOURCE_DIR}/${MNXDOM_LOCAL_PATH}" ABSOLUTE)
+    if(EXISTS "${MNXDOM_LOCAL_PATH_ABS}/CMakeLists.txt")
+        message(STATUS "Local MNX C++ DOM found at ${MNXDOM_LOCAL_PATH_ABS}")
+        # Set the FetchContent source directory to the computed absolute path.
+        set(FETCHCONTENT_SOURCE_DIR_MNXDOM "${MNXDOM_LOCAL_PATH_ABS}" CACHE INTERNAL "")
     else()
-        message(FATAL_ERROR "Local MNX C++ DOM not found at ${MNXDOM_LOCAL_PATH}")
+        message(FATAL_ERROR "Local MNX C++ DOM not found at ${MNXDOM_LOCAL_PATH_ABS}")
     endif()
 else()
     message(STATUS "Using GitHub for MNX C++ DOM")
