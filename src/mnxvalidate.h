@@ -233,15 +233,6 @@ std::string getTimeStamp(const std::string& fmt);
 bool createDirectoryIfNeeded(const std::filesystem::path& path);
 void showAboutPage();
 
-inline bool nodeExists(json jsonData, const std::string_view& nodeName, bool required = true)
-{
-    bool retval = jsonData.contains(nodeName);
-    if (required && !retval) {
-        throw std::invalid_argument("Validated JSON node does not contain required value \"" + std::string(nodeName) + "\"!");
-    }
-    return retval;
-}
-
 } // namespace mnxvalidate
 
 #ifdef MNXVALIDATE_TEST // this is defined on the command line by the test program
