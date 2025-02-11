@@ -348,6 +348,8 @@ static void validateScores(const MnxValidateContext& context)
                     }
                 }
             }
+            std::optional<size_t> lastSystemMeasure;
+            bool isFirstSystem = true;
             if (auto pages = score.pages()) {
                 for (const auto page : pages.value()) {
                     size_t x = page.calcArrayIndex();
@@ -360,19 +362,32 @@ static void validateScores(const MnxValidateContext& context)
                         size_t y = system.calcArrayIndex();
                         if (const auto layout = system.layout()) {
                             if (!context.getLayoutIndex(layout.value(), "System[" + std::to_string(y)
-                                        + "] in page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
+                                        + "] on page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
                                 valid = false;
                             }
                         }
-                        if (!context.getMeasureIndex(system.measure(), "System[" + std::to_string(y)
-                                        + "] in page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
+                        auto currentSystemMeasure = context.getMeasureIndex(system.measure(), "System[" + std::to_string(y)
+                                + "] on page[" + std::to_string(x) + "] in score \"" + score.name() + "\"");
+                        if (!currentSystemMeasure) {
                             valid = false;
+                        } else if (isFirstSystem && currentSystemMeasure.value() > 0) {
+                            context.logMessage(LogMsg() << "The first system in score \"" << score.name() 
+                                << "\" starts after the first measure.", LogSeverity::Error);
                         }
+                        isFirstSystem = false;
+                        if (lastSystemMeasure && currentSystemMeasure <= lastSystemMeasure) {
+                            std::string msg = currentSystemMeasure < lastSystemMeasure
+                                                                   ? " starts before"
+                                                                   : " starts on the same measure as";
+                            context.logMessage(LogMsg() << "System[" << y << "] on page[" << x << "] in score \"" << score.name() << "\""
+                                << msg << " previous system.", LogSeverity::Error);
+                        }
+                        lastSystemMeasure = currentSystemMeasure;
                         if (const auto layoutChanges = system.layoutChanges()) {
                             for (const auto layoutChange : layoutChanges.value()) {
                                 size_t z = layoutChange.calcArrayIndex();
                                 if (!context.getLayoutIndex(layoutChange.layout(), "Layout change[" + std::to_string(z) + "] in system[" + std::to_string(y)
-                                            + "] in page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
+                                            + "] on page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
                                     valid = false;
                                 }
                                 /// @todo validate location.bar

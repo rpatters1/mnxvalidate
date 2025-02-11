@@ -1,0 +1,34 @@
+{
+    "mnx": {
+        "version": 1
+    },
+    "global": {
+        "measures": [
+            {
+                "index": 2
+            },
+            {},
+            {},
+            {},
+            {}
+        ]
+    },
+    "parts": [],
+    "scores": [
+        {
+            "name": "Score",
+            "pages": [
+                {
+                    "systems": []
+                },
+                {
+                    "systems": [
+                        {
+                            "measure": 3
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

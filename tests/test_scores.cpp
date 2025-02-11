@@ -94,7 +94,27 @@ TEST(Scores, InvalidSystemStartMeasure)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_system_bad_measure.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_system_bad_measure.json"), "System[0] in page[0] in score \"Score\" references non-existent measure 1" }, [&]() {
+    checkStderr({ std::string("score_system_bad_measure.json"), "System[0] on page[0] in score \"Score\" references non-existent measure 1" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}
+
+TEST(Scores, InvalidSystemMeasureSequence)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "score_system_bad_start.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("score_system_bad_start.json"), "System[2] on page[0] in score \"Score\" starts before previous system" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}
+
+TEST(Scores, InvalidSystemMeasureSequence2)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "score_system_bad_start2.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("score_system_bad_start2.json"), "The first system in score \"Score\" starts after the first measure" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
