@@ -292,11 +292,11 @@ static void validateLayouts(const MnxValidateContext& context)
             }
             auto validateContent = [&](auto&& self, const mnx::ContentArray& content) -> void {
                 for (const auto element : content) {
-                    if (element.type() == mnx::LayoutGroup::ContentTypeValue) {
-                        auto group = element.get<mnx::LayoutGroup>();
+                    if (element.type() == mnx::layout::Group::ContentTypeValue) {
+                        auto group = element.get<mnx::layout::Group>();
                         self(self, group.content());
-                    } else if (element.type() == mnx::LayoutStaff::ContentTypeValue) {
-                        auto staff = element.get<mnx::LayoutStaff>();
+                    } else if (element.type() == mnx::layout::Staff::ContentTypeValue) {
+                        auto staff = element.get<mnx::layout::Staff>();
                         /// @todo validate "labelref"?
                         for (const auto source : staff.sources()) {
                             if (auto index = context.getPartIndex(source.part(), "Layout \"" + layout.id() + "\"")) {
