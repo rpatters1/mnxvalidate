@@ -390,7 +390,10 @@ static void validateScores(const MnxValidateContext& context)
                                             + "] on page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
                                     valid = false;
                                 }
-                                /// @todo validate location.bar
+                                if (!context.getMeasureIndex(layoutChange.location().measure(), "Layout change[" + std::to_string(z) + "] in system[" + std::to_string(y)
+                                           + "] on page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
+                                    valid = false;
+                                }
                                 /// @todo perhaps eventually flag location.position.fraction if it is too large for the measure
                             }
                         }
