@@ -1,4 +1,9 @@
-*** Validation ideas
+## Validation ideas
+
+- confirm global.lyrics.lineOrder array matches keys in lineMetadata.
+- confirm staff systems neither skip nor overlap measures. (done)
+
+### 1.0 completed
 
 - confirm multimeasure rests span measures that exist
 - confirm measure counts in each part (optionally: it may be permissible to have different numbers of measures per part. need to check)
@@ -10,7 +15,7 @@
     - "stem" (staff source stem direction) -- enforced by schema
     - "symbol" (group bracket) -- enforced by schema
 
-*** Questions and Suggestions
+### Questions and Suggestions
 
 - more symbol styles for groups (in particular, deskBracket)
 - since the staff object has a "labelref" property, should it not also have a "part" property?

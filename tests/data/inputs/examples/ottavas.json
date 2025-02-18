@@ -59,7 +59,7 @@
                          {
                             "type": "ottava",
                             "end": {
-                               "bar": 2,
+                               "measure": 2,
                                "position": {
                                   "fraction": [
                                      1,

@@ -321,7 +321,7 @@
                          {
                             "layout": "organ3StaffSplitOber",
                             "location": {
-                               "bar": 1,
+                               "measure": 1,
                                "position": {
                                   "fraction": [
                                      3,

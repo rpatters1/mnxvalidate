@@ -104,7 +104,7 @@
                                 {
                                     "layout": "does-not-exist",
                                     "location": {
-                                        "bar": 1,
+                                        "measure": 1,
                                         "position": {
                                             "fraction": [
                                                 1,

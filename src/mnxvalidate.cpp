@@ -292,15 +292,15 @@ static void validateLayouts(const MnxValidateContext& context)
             }
             auto validateContent = [&](auto&& self, const mnx::ContentArray& content) -> void {
                 for (const auto element : content) {
-                    if (element.type() == mnx::LayoutGroup::ContentTypeValue) {
-                        auto group = element.get<mnx::LayoutGroup>();
+                    if (element.type() == mnx::layout::Group::ContentTypeValue) {
+                        auto group = element.get<mnx::layout::Group>();
                         self(self, group.content());
-                    } else if (element.type() == mnx::LayoutStaff::ContentTypeValue) {
-                        auto staff = element.get<mnx::LayoutStaff>();
+                    } else if (element.type() == mnx::layout::Staff::ContentTypeValue) {
+                        auto staff = element.get<mnx::layout::Staff>();
                         /// @todo validate "labelref"?
                         for (const auto source : staff.sources()) {
                             if (auto index = context.getPartIndex(source.part(), "Layout \"" + layout.id() + "\"")) {
-                                int staffNum = source.staff();
+                                int staffNum = source.staff().value_or(1);
                                 const auto part = context.mnxDoc->parts()[*index];
                                 int numStaves = part.staves();
                                 if (staffNum > numStaves || staffNum < 1) {
@@ -390,7 +390,10 @@ static void validateScores(const MnxValidateContext& context)
                                             + "] on page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
                                     valid = false;
                                 }
-                                /// @todo validate location.bar
+                                if (!context.getMeasureIndex(layoutChange.location().measure(), "Layout change[" + std::to_string(z) + "] in system[" + std::to_string(y)
+                                           + "] on page[" + std::to_string(x) + "] in score \"" + score.name() + "\"")) {
+                                    valid = false;
+                                }
                                 /// @todo perhaps eventually flag location.position.fraction if it is too large for the measure
                             }
                         }
