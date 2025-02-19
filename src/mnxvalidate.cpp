@@ -300,7 +300,7 @@ static void validateLayouts(const MnxValidateContext& context)
                         /// @todo validate "labelref"?
                         for (const auto source : staff.sources()) {
                             if (auto index = context.getPartIndex(source.part(), "Layout \"" + layout.id() + "\"")) {
-                                int staffNum = source.staff().value_or(1);
+                                int staffNum = source.staff();
                                 const auto part = context.mnxDoc->parts()[*index];
                                 int numStaves = part.staves();
                                 if (staffNum > numStaves || staffNum < 1) {
