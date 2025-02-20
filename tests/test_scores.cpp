@@ -118,3 +118,13 @@ TEST(Scores, InvalidSystemMeasureSequence2)
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
+
+TEST(Scores, EdgeCaseMMRest)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "errors" / "mmrest_edgecase.json";
+    ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
+    checkStderr({ std::string("mmrest_edgecase.json"), "is valid" }, [&]() {
+        EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
+    });
+}

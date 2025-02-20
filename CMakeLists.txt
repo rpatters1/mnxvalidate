@@ -118,7 +118,7 @@ option(mnxdom_BUILD_TESTING "Enable testing mnxdom" ON)
 FetchContent_Declare(
     mnxdom
     GIT_REPOSITORY https://github.com/rpatters1/mnxdom.git
-    GIT_TAG        main
+    GIT_TAG        dev/denigma-support-phase-2
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(mnxdom)

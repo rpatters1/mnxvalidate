@@ -338,7 +338,7 @@ static void validateScores(const MnxValidateContext& context)
             if (const auto multimeasureRests = score.multimeasureRests()) {
                 for (const auto mmRest : multimeasureRests.value()) {
                     if (auto index = context.getMeasureIndex(mmRest.start(), "Multimeasure rest in score \"" + score.name() + "\"")) {
-                        if (*index + mmRest.duration() >= context.measCount) {
+                        if (*index + mmRest.duration() > context.measCount) {
                             context.logMessage(LogMsg() << "Multimeasure rest at measure " + std::to_string(mmRest.start()) + " in score \""
                                 + score.name() + "\" spans non-existent measures.", LogSeverity::Error);
                             valid = false;
