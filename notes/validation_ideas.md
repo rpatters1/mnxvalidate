@@ -5,6 +5,8 @@
 - validate that event objects either have a duration or a full-measure indication but not both.
 - validate that lyric line labels in event objects are valid values.
 - events should either be marked rest or have notes.
+- event ids and note ids should be unique
+- tied-to note ids should have the same pitch name, octave, and alteration as their counterparts.
 
 - confirm staff systems neither skip nor overlap measures. (done)
 
