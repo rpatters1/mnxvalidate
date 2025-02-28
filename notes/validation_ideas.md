@@ -7,6 +7,8 @@
 - events should either be marked rest or have notes.
 - event ids and note ids should be unique
 - tied-to note ids should have the same pitch name, octave, and alteration as their counterparts.
+- events in beams may only be specified once.
+- events in beams must have a correct note value for the beam.
 
 - confirm staff systems neither skip nor overlap measures. (done)
 
