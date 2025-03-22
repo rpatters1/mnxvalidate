@@ -287,9 +287,11 @@
                                      "octave": 3,
                                      "step": "E"
                                   },
-                                  "tie": {
-                                     "target": "pedNote2"
-                                  }
+                                  "ties": [
+                                    {
+                                       "target": "pedNote2"
+                                    }
+                                  ]
                                }
                             ]
                          }

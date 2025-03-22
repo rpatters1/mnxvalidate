@@ -62,7 +62,7 @@ if(mnxvalidate_BUILD_TESTING)
     FetchContent_MakeAvailable(googletest)
 
     # Link Google Test libraries
-    target_link_libraries(mnxvalidate_tests PRIVATE gtest gmock gtest_main)
+    target_link_libraries(mnxvalidate_tests PRIVATE gmock gtest_main)
 
     # Discover tests
     include(GoogleTest)
