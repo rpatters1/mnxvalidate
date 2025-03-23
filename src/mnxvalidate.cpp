@@ -230,7 +230,7 @@ static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath,
         }
         context.logMessage(LogMsg() << "Validation errors:", LogSeverity::Error);
         for (const auto& error : validateResult.errors) {
-            context.logMessage(LogMsg() << "    "  << error, LogSeverity::Error);
+            context.logMessage(LogMsg() << "    "  << error.to_string(), LogSeverity::Error);
         }
     } catch (const json::exception& e) {
         context.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
