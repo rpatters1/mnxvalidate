@@ -222,13 +222,16 @@ static bool validateJsonAgainstSchema(const std::filesystem::path& jsonFilePath,
 {
     try {
         auto doc = std::make_unique<mnx::Document>(mnx::Document::create(jsonFilePath));
-        auto validateMessage = doc->validate(context.mnxSchema);
-        if (!validateMessage.has_value()) {
+        auto validateResult = mnx::validation::schemaValidate(*doc, context.mnxSchema);
+        if (validateResult) {
             context.logMessage(LogMsg() << "is valid against the MNX schema.");
             context.mnxDoc = std::move(doc);
             return true;
         }
-        context.logMessage(LogMsg() << "Validation error: " << validateMessage.value(), LogSeverity::Error);        
+        context.logMessage(LogMsg() << "Validation errors:", LogSeverity::Error);
+        for (const auto& error : validateResult.errors) {
+            context.logMessage(LogMsg() << "    "  << error, LogSeverity::Error);
+        }
     } catch (const json::exception& e) {
         context.logMessage(LogMsg() << "Parsing error: " << e.what(), LogSeverity::Error);
     }
