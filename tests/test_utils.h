@@ -81,12 +81,6 @@ inline void checkStdout(const std::string& expectedMessage, std::function<void()
 
 constexpr const char MNXVALIDATE_NAME[] = "mnxvalidate";
 
-#ifdef _WIN32
-constexpr char DIRECTORY_SEP = '\\';
-#else
-constexpr char DIRECTORY_SEP = '/';
-#endif
-
 inline std::filesystem::path getInputPath()
 { return std::filesystem::current_path() / "inputs"; }
 
