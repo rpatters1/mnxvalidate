@@ -33,7 +33,7 @@ TEST(Examples, All)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "examples";
     ArgList args1 = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("is valid"), "!is not valid" }, [&]() {
+    checkStderr({ std::string("Schema validation succeeded"), "!Schema validation failed" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args1.argc(), args1.argv()), 0) << "validate " << inputPath.u8string();
     });
 }

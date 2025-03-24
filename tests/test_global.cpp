@@ -34,7 +34,7 @@ TEST(Global, DuplicateMeasures)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "duplicate_measures.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("duplicate_measures.json"), "measure index 1 is duplicated at location 0 and 2" }, [&]() {
+    checkStderr({ std::string("duplicate_measures.json"), "ID 1 already exists at index 0" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }

@@ -34,7 +34,7 @@ TEST(Layouts, DuplicateId)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "duplicate_layouts.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("duplicate_layouts.json"), "more than one layout with id \"S0-ScrVw\"" }, [&]() {
+    checkStderr({ std::string("duplicate_layouts.json"), "ID \"S0-ScrVw\" already exists at index 0" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -44,7 +44,7 @@ TEST(Layouts, NonexistentPartId)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "layout_with_bad_part.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("layout_with_bad_part.json"), "\"S0-ScrVw\" references non-existent part \"P-does-not-exist\"" }, [&]() {
+    checkStderr({ std::string("layout_with_bad_part.json"), "ID \"P-does-not-exist\" not found in key index list" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -54,7 +54,7 @@ TEST(Layouts, NonexistentStaffNumber)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "layout_invalid_staffnum.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("layout_invalid_staffnum.json"), "Layout \"badStaff\" references non-existent part \"P2\"" }, [&]() {
+    checkStderr({ std::string("layout_invalid_staffnum.json"), "ID \"P2\" not found in key index list" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }

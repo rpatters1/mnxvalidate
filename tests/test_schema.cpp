@@ -34,7 +34,7 @@ TEST(Schema, InputSchemaValid)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / utils::utf8ToPath("generic_nonascii_其れ.json");
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string(), "--schema-only" };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
+    checkStderr({ "Processing", inputPath.filename().u8string(), "Schema validation succeeded" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -44,7 +44,7 @@ TEST(Schema, InputSchemaNotValid)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "valid.mnx";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--schema", (getInputPath() / "generic_schema.json").u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
+    checkStderr({ "Processing", inputPath.filename().u8string(), "Schema validation failed" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -54,7 +54,7 @@ TEST(Schema, EmbeddedSchemaValid)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "valid.mnx";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
+    checkStderr({ "Processing", inputPath.filename().u8string(), "Schema validation succeeded" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -64,7 +64,7 @@ TEST(Schema, EmbeddedSchemaNotValid)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / utils::utf8ToPath("generic_nonascii_其れ.json");
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is not valid" }, [&]() {
+    checkStderr({ "Processing", inputPath.filename().u8string(), "Schema validation failed" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }

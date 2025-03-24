@@ -34,7 +34,7 @@ TEST(Scores, InvalidScoreLayoutId)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_bad_layout.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_bad_layout.json"), "references non-existent layout \"does-not-exist\"" }, [&]() {
+    checkStderr({ std::string("score_bad_layout.json"), "ID \"does-not-exist\" not found in key index list" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -44,7 +44,7 @@ TEST(Scores, InvalidScorePageLayoutId)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_page_bad_layout.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_page_bad_layout.json"), "Page[0]", "references non-existent layout \"does-not-exist\"" }, [&]() {
+    checkStderr({ std::string("score_page_bad_layout.json"), "ID \"does-not-exist\" not found", "ID 1 not found" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -54,7 +54,7 @@ TEST(Scores, InvalidScoreSystemLayoutId)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_system_bad_layout.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_system_bad_layout.json"), "System[0]", "references non-existent layout \"does-not-exist\"" }, [&]() {
+    checkStderr({ std::string("score_system_bad_layout.json"), "/scores/0/pages/0/systems/0", "ID \"does-not-exist\" not found" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -64,7 +64,7 @@ TEST(Scores, InvalidScoreLayoutChangeLayoutId)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_layoutchange_bad_layout.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_layoutchange_bad_layout.json"), "Layout change[0]", "references non-existent layout \"does-not-exist\"" }, [&]() {
+    checkStderr({ std::string("score_layoutchange_bad_layout.json"), "ID 1 not found ", "ID \"does-not-exist\" not found" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -74,7 +74,7 @@ TEST(Scores, InvalidMMRestStartMeasure)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_mmrest_bad_start.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_mmrest_bad_start.json"), "Multimeasure rest in score \"Score\" references non-existent measure 3" }, [&]() {
+    checkStderr({ std::string("score_mmrest_bad_start.json"), "/scores/0/multimeasureRests/0", "ID 3 not found" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -94,7 +94,7 @@ TEST(Scores, InvalidSystemStartMeasure)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_system_bad_measure.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_system_bad_measure.json"), "System[0] on page[0] in score \"Score\" references non-existent measure 1" }, [&]() {
+    checkStderr({ std::string("score_system_bad_measure.json"), "/scores/0/pages/0/systems/0", "ID 1 not found" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -104,7 +104,7 @@ TEST(Scores, InvalidSystemMeasureSequence)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "score_system_bad_start.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("score_system_bad_start.json"), "System[2] on page[0] in score \"Score\" starts before previous system" }, [&]() {
+    checkStderr({ std::string("score_system_bad_start.json"), "Score \"Score\" contains system that starts before previous system" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
@@ -124,7 +124,7 @@ TEST(Scores, EdgeCaseMMRest)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "mmrest_edgecase.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("mmrest_edgecase.json"), "is valid" }, [&]() {
+    checkStderr({ std::string("mmrest_edgecase.json"), "Schema validation succeeded" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }

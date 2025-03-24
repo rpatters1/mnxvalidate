@@ -34,7 +34,7 @@ TEST(Parts, DuplicateId)
     setupTestDataPaths();
     std::filesystem::path inputPath = getInputPath() / "errors" / "duplicate_parts.json";
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--no-log" };
-    checkStderr({ std::string("duplicate_parts.json"), "more than one part with id \"P1\"" }, [&]() {
+    checkStderr({ std::string("duplicate_parts.json"), "ID \"P1\" already exists at index 0" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
 }
