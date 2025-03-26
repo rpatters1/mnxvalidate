@@ -2,9 +2,9 @@
 
 - validate voice uniqueness for sequence objects (should it be unique per staff?)
 
-- tied-to note ids should have the same pitch name, octave, and alteration as their counterparts.
 - events in beams may only be specified once.
 - events in beams must have a correct note value for the beam.
+- slur validation (target must exist)
 
 ### 2.0 completed
 
@@ -14,6 +14,7 @@
 - confirm that event objects either have a duration or a full-measure indication but not both.
 - confirm that events are either rests or have notes but not both.
 - confirm that lyric line labels in event objects are valid values, if global.lyrics provided the valid values.
+- confirm tied-to note ids exist and have the same part, pitch name, octave, and alteration as their counterparts.
 
 ### 1.0 completed
 
