@@ -2,10 +2,6 @@
 
 - validate voice uniqueness for sequence objects (should it be unique per staff?)
 
-- events in beams may only be specified once.
-- events in beams must have a correct note value for the beam.
-- slur validation (target must exist)
-
 ### 2.0 completed
 
 - confirm staff systems neither skip nor overlap measures.
@@ -15,6 +11,10 @@
 - confirm that events are either rests or have notes but not both.
 - confirm that lyric line labels in event objects are valid values, if global.lyrics provided the valid values.
 - confirm tied-to note ids exist and have the same part, pitch name, octave, and alteration as their counterparts.
+- confirm events in beams are only specified once.
+- confirm beam nesting level does not exceed number of flags on note values of enclosed events.
+- confirm that the number of flags on events specified with beam hooks exceeds the beam nesting level.
+- validate slurs (target, startNote, endNote)
 
 ### 1.0 completed
 
