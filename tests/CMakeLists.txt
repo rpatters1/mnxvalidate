@@ -11,12 +11,7 @@ if(mnxvalidate_BUILD_TESTING)
     # Add an executable for the test suite
     add_executable(mnxvalidate_tests
         mnxvalidatetests.cpp
-        test_examples.cpp
-        test_global.cpp
-        test_layouts.cpp
-        test_parts.cpp
         test_schema.cpp
-        test_scores.cpp
         test_logging.cpp
         ${MNXVALIDATE_SOURCES}
     )
@@ -79,4 +74,8 @@ if(mnxvalidate_BUILD_TESTING)
         COMMAND $<TARGET_FILE:mnxdom_tests>
     )
     
+    set_tests_properties(mnxdom_tests PROPERTIES
+        WORKING_DIRECTORY ${mnxdom_SOURCE_DIR}/tests/data
+    )
+
 endif()

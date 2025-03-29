@@ -36,7 +36,7 @@ TEST(Logging, SingleFileNoLog)
     std::filesystem::path inputPath;
     copyInputToOutput(inputFile, inputPath);
      ArgList args = { MNXVALIDATE_NAME, inputPath.u8string() };
-    checkStderr({ "Processing", inputPath.filename().u8string(), "is valid" }, [&]() {
+    checkStderr({ "Processing", inputPath.filename().u8string(), "Schema validation succeeded" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
     auto logPath = inputPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
@@ -51,11 +51,11 @@ TEST(Logging, InPlace)
     copyInputToOutput(inputFile, inputPath);
     // default log
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--log" };
-    checkStderr("is not valid", [&]() {
+    checkStderr("Schema validation failed", [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     });
     auto logPath = inputPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
-    assertStringsInFile({ "Processing", inputPath.filename().u8string(), "is not valid" }, logPath, ".log");
+    assertStringsInFile({ "Processing", inputPath.filename().u8string(), "Schema validation failed" }, logPath, ".log");
 }
 
 TEST(Logging, Subdirectory)
@@ -67,7 +67,7 @@ TEST(Logging, Subdirectory)
     ArgList args = { MNXVALIDATE_NAME, inputPath.u8string(), "--log", "logs" };
     EXPECT_EQ(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << inputPath.u8string();
     auto logPath = inputPath.parent_path() / "logs";
-    assertStringsInFile({ "Processing", inputPath.filename().u8string(), "is valid" }, logPath, ".log");
+    assertStringsInFile({ "Processing", inputPath.filename().u8string(), "Schema validation succeeded" }, logPath, ".log");
 }
 
 TEST(Logging, SpecificFile)
@@ -83,11 +83,11 @@ TEST(Logging, SpecificFile)
     ArgList args1 = { MNXVALIDATE_NAME, validPath.u8string(), "--log", "logs/mylog.log" };
     EXPECT_EQ(mnxValidateTestMain(args1.argc(), args1.argv()), 0) << "validate " << validPath.u8string();
     ArgList args2 = { MNXVALIDATE_NAME, invalidPath.u8string(), "--log", "logs/mylog.log" };
-    checkStderr("is not valid", [&]() {
+    checkStderr("Schema validation failed", [&]() {
         EXPECT_NE(mnxValidateTestMain(args2.argc(), args2.argv()), 0) << "validate " << invalidPath.u8string();
     });
     auto logPath = validPath.parent_path() / "logs";
-    assertStringsInFile({ "Processing", validPath.filename().u8string(), invalidPath.filename().u8string(), "is valid", "is not valid" }, logPath, ".log");
+    assertStringsInFile({ "Processing", validPath.filename().u8string(), invalidPath.filename().u8string(), "Schema validation succeeded", "Schema validation failed" }, logPath, ".log");
 }
 
 TEST(Logging, NonExistentFile)
@@ -115,7 +115,7 @@ TEST(Logging, PatternFile)
     });
     auto logPath = inputPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
     EXPECT_TRUE(std::filesystem::exists(logPath)) << "log file should have been created";
-    assertStringsInFile({ "Processing", "valid.mnx", "is valid", "!generic" }, logPath, ".log");
+    assertStringsInFile({ "Processing", "valid.mnx", "Schema validation succeeded", "!generic" }, logPath, ".log");
 }
 
 TEST(Logging, Directory)
@@ -131,7 +131,7 @@ TEST(Logging, Directory)
     });
     auto logPath = inputPath / (std::string(MNXVALIDATE_NAME) + "-logs");
     EXPECT_TRUE(std::filesystem::exists(logPath)) << "log file should have been created";
-    assertStringsInFile({ "Processing", "valid.mnx", "is valid" }, logPath, ".log");
+    assertStringsInFile({ "Processing", "valid.mnx", "Schema validation succeeded" }, logPath, ".log");
 }
 
 TEST(Logging, MultipleInputs)
@@ -145,9 +145,9 @@ TEST(Logging, MultipleInputs)
     copyInputToOutput(invalidFile, invalidPath);
     // specific file with appending
     ArgList args = { MNXVALIDATE_NAME, validPath.u8string(), invalidPath.u8string() };
-    checkStderr("is not valid", [&]() {
+    checkStderr("Schema validation failed", [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << invalidPath.u8string();
     });
     auto logPath = validPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
-    assertStringsInFile({ "Processing", validPath.filename().u8string(), invalidPath.filename().u8string(), "is valid", "is not valid" }, logPath, ".log");
+    assertStringsInFile({ "Processing", validPath.filename().u8string(), invalidPath.filename().u8string(), "Schema validation succeeded", "Schema validation failed" }, logPath, ".log");
 }

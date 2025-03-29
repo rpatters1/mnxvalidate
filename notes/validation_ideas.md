@@ -1,16 +1,20 @@
 ## Validation ideas
 
-- confirm global.lyrics.lineOrder array matches keys in lineMetadata.
-- validate voice uniqueness for sequence objects
-- validate that event objects either have a duration or a full-measure indication but not both.
-- validate that lyric line labels in event objects are valid values.
-- events should either be marked rest or have notes.
-- event ids and note ids should be unique
-- tied-to note ids should have the same pitch name, octave, and alteration as their counterparts.
-- events in beams may only be specified once.
-- events in beams must have a correct note value for the beam.
+- validate voice uniqueness for sequence objects (should it be unique per staff?)
 
-- confirm staff systems neither skip nor overlap measures. (done)
+### 2.0 completed
+
+- confirm staff systems neither skip nor overlap measures.
+- confirm that global.lyrics.lineMetadata and global.lyrics.lineOrder arrays match if both are provided.
+- confirm event ids and note ids are unique
+- confirm that event objects either have a duration or a full-measure indication but not both.
+- confirm that events are either rests or have notes but not both.
+- confirm that lyric line labels in event objects are valid values, if global.lyrics provided the valid values.
+- confirm tied-to note ids exist and have the same part, pitch name, octave, and alteration as their counterparts.
+- confirm events in beams are only specified once.
+- confirm beam nesting level does not exceed number of flags on note values of enclosed events.
+- confirm that the number of flags on events specified with beam hooks exceeds the beam nesting level.
+- validate slurs (target, startNote, endNote)
 
 ### 1.0 completed
 
