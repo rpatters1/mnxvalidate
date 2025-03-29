@@ -74,4 +74,8 @@ if(mnxvalidate_BUILD_TESTING)
         COMMAND $<TARGET_FILE:mnxdom_tests>
     )
     
+    set_tests_properties(mnxdom_tests PROPERTIES
+        WORKING_DIRECTORY ${mnxdom_SOURCE_DIR}/tests/data
+    )
+
 endif()
