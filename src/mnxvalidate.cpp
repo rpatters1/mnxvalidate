@@ -259,8 +259,9 @@ void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) co
         if (success && !schemaOnly) {
             auto result = mnx::validation::semanticValidate(*mnxDoc);
             if (result) {
-                logMessage(LogMsg() << "Semantic validation complete (" << result.measureCount << " measures, " << result.partList.size()
-                    << " parts, " << result.layoutList.size() << " layouts).");
+                size_t layoutSize = mnxDoc->layouts() ? mnxDoc->layouts().value().size() : 0;
+                logMessage(LogMsg() << "Semantic validation complete (" << mnxDoc->global().measures().size() << " measures, "
+                    << mnxDoc->parts().size() << " parts, " << layoutSize << " layouts).");
             } else {
                 logMessage(LogMsg() << "Semantic validation errors:", LogSeverity::Error);
                 for (const auto& error : result.errors) {
