@@ -5,18 +5,18 @@ REM Set our working directory
 cd /d %~dp0/..
 
 REM Check if the environment variable is set
-if "%DENIGMA_PRODUCTION_DEPLOY_PATH%"=="" (
-    echo ERROR: DENIGMA_PRODUCTION_DEPLOY_PATH environment variable is not set.
+if "%MNXVALIDATE_PRODUCTION_DEPLOY_PATH%"=="" (
+    echo ERROR: MNXVALIDATE_PRODUCTION_DEPLOY_PATH environment variable is not set.
     exit /b 1
 )
 
 REM Set default build directory
 set BUILD_DIR=build
-set LOCAL_DEPLOY_DIR=deploy
+set LOCAL_DEPLOY_DIR=mnxvalidate
 
 echo Using build directory: %BUILD_DIR%
 echo Using local deploy directory: %LOCAL_DEPLOY_DIR%
-echo Using production deploy path: %DENIGMA_PRODUCTION_DEPLOY_PATH%
+echo Using production deploy path: %MNXVALIDATE_PRODUCTION_DEPLOY_PATH%
 echo Using configuration: Release
 
 REM Clean CMake configuration
@@ -41,13 +41,13 @@ if errorlevel 1 (
 )
 
 REM Copy denigma.exe to production deploy directory
-if not exist "%DENIGMA_PRODUCTION_DEPLOY_PATH%" (
+if not exist "%MNXVALIDATE_PRODUCTION_DEPLOY_PATH%" (
     echo Production deploy directory does not exist. Creating it...
-    mkdir "%DENIGMA_PRODUCTION_DEPLOY_PATH%"
+    mkdir "%MNXVALIDATE_PRODUCTION_DEPLOY_PATH%"
 )
 
-echo Copying denigma.exe to %DENIGMA_PRODUCTION_DEPLOY_PATH%...
-copy "%LOCAL_DEPLOY_DIR%\mnxvalidate.exe" "%DENIGMA_PRODUCTION_DEPLOY_PATH%"
+echo Copying mnxvalidate.exe to %MNXVALIDATE_PRODUCTION_DEPLOY_PATH%...
+copy "%LOCAL_DEPLOY_DIR%\mnxvalidate.exe" "%MNXVALIDATE_PRODUCTION_DEPLOY_PATH%"
 if errorlevel 1 (
     echo Failed to copy mnxvalidate.exe to production deploy directory.
     exit /b %errorlevel%
