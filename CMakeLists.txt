@@ -96,6 +96,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(miniz-cpp)
 
+include(cmake/Dependencies.cmake) # GitHub branches/tags for MNX and MUSX
+
 # Define a cache variable for the local MNX C++ DOM path relative to the source directory.
 set(MNXDOM_LOCAL_PATH "" CACHE STRING "Path to local MNX C++ DOM checkout relative to the source directory (if provided)")
 
@@ -110,7 +112,7 @@ if(MNXDOM_LOCAL_PATH)
         message(FATAL_ERROR "Local MNX C++ DOM not found at ${MNXDOM_LOCAL_PATH_ABS}")
     endif()
 else()
-    message(STATUS "Using GitHub for MNX C++ DOM")
+    message(STATUS "Using GitHub for MNX C++ DOM (${MNXDOM_GIT_TAG_OR_BRANCH})")
 endif()
 
 option(mnxdom_BUILD_TESTING "Enable testing mnxdom" ON)
@@ -118,7 +120,7 @@ option(mnxdom_BUILD_TESTING "Enable testing mnxdom" ON)
 FetchContent_Declare(
     mnxdom
     GIT_REPOSITORY https://github.com/rpatters1/mnxdom.git
-    GIT_TAG        main
+    GIT_TAG        ${MNXDOM_GIT_TAG_OR_BRANCH}
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(mnxdom)
