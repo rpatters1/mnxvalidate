@@ -1,0 +1,8 @@
+# === SINGLE SOURCE OF TRUTH FOR DEPENDENCY VERSIONS ===
+# MANUALLY EDIT THIS WHEN SWITCHING BETWEEN DEV AND RELEASE.
+
+# For dev cycle (point to branch):
+# set(MNXDOM_GIT_TAG_OR_BRANCH "main" CACHE STRING "")
+
+# For release (point to tag or commit hash):
+set(MNXDOM_GIT_TAG_OR_BRANCH "7e1951c560d2914c49a4cab61f519fbff2f7a405" CACHE STRING "")
