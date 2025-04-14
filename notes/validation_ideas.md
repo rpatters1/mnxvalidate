@@ -2,6 +2,10 @@
 
 - validate voice uniqueness for sequence objects (should it be unique per staff?)
 
+### 2.1 completed
+
+- detect if beam contains a mix of grace notes and non grace notes
+
 ### 2.0 completed
 
 - confirm staff systems neither skip nor overlap measures.
