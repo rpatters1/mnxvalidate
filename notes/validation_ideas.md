@@ -4,7 +4,10 @@
 
 ### 2.1 completed
 
-- detect if beam contains a mix of grace notes and non grace notes
+- detect if a beam contains a mix of grace notes and non grace notes.
+- detect if different beams in the same measure contain the same event at the same level.
+- detect if a sequence contains more musical time than the time signature specifies.
+- detect if a content array in a sequence contains invalid entities.
 
 ### 2.0 completed
 
