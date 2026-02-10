@@ -56,7 +56,7 @@ static miniz_cpp::zip_file openZip(const std::filesystem::path& zipFilePath, con
         zipReader.open(zipFilePath, std::ios::binary);
         return miniz_cpp::zip_file(zipReader);
     } catch (const std::exception &ex) {
-        mnxValidateContext.logMessage(LogMsg() << "unable to extract data from file " << zipFilePath.u8string(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << "unable to extract data from file " << utils::pathToString(zipFilePath), LogSeverity::Error);
         mnxValidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
         throw;
     }
@@ -113,7 +113,7 @@ static std::string getMusicXmlScoreName(const std::filesystem::path& zipFilePath
 {
     std::filesystem::path defaultName = zipFilePath.filename();
     defaultName.replace_extension(MUSICXML_EXTENSION);
-    std::string fileName = defaultName.filename().u8string();
+    std::string fileName = utils::pathToString(defaultName.filename());
     try {
         iterateFiles(zip, std::nullopt, [&](const miniz_cpp::zip_info& fileInfo) {
             if (fileInfo.filename == "META-INF/container.xml") {
@@ -133,7 +133,7 @@ static std::string getMusicXmlScoreName(const std::filesystem::path& zipFilePath
         });
         return fileName;
     } catch (const std::exception &ex) {
-        mnxValidateContext.logMessage(LogMsg() << "unable to extract META-INF/container.xml from file " << zipFilePath.u8string(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << "unable to extract META-INF/container.xml from file " << utils::pathToString(zipFilePath), LogSeverity::Error);
         mnxValidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
         throw;
     }
@@ -157,7 +157,7 @@ bool iterateMusicXmlPartFiles(const std::filesystem::path& zipFilePath, const mn
             return true; // skip parts that aren't the one we are looking for
         }
         std::filesystem::path nextPath = utils::utf8ToPath(fileInfo.filename);
-        if (nextPath.extension().u8string() == std::string(".") + MUSICXML_EXTENSION) {
+        if (utils::pathToString(nextPath.extension()) == std::string(".") + MUSICXML_EXTENSION) {
             return iterator(nextPath, zip.read(fileInfo.filename));
         }
         return true;
@@ -185,7 +185,7 @@ bool iterateModifyFilesInPlace(const std::filesystem::path& zipFilePath, const s
         zipWriter.open(outputPath, std::ios::binary);
         outputZip.save(zipWriter);
     } catch (const std::exception &ex) {
-        mnxValidateContext.logMessage(LogMsg() << "unable to save data to file " << outputPath.u8string(), LogSeverity::Error);
+        mnxValidateContext.logMessage(LogMsg() << "unable to save data to file " << utils::pathToString(outputPath), LogSeverity::Error);
         mnxValidateContext.logMessage(LogMsg() << " (exception: " << ex.what() << ")", LogSeverity::Error);
         throw;
     }

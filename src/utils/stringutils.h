@@ -22,6 +22,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <exception>
 #include <filesystem>
 #include <algorithm>
@@ -99,14 +100,19 @@ inline std::string utf8ToAcp(const std::string& utf8)
     return utf8;
 }
 
-inline std::filesystem::path utf8ToPath(const std::string& str)
+inline std::string u8ToString(std::u8string_view utf8)
 {
-#ifdef _WIN32
-    if (::GetACP() != CP_UTF8) {
-        return stringToWstring(str, CP_UTF8);
-    }
-#endif
-    return str;
+    return { reinterpret_cast<const char*>(utf8.data()), utf8.size() };
+}
+
+inline std::string pathToString(const std::filesystem::path& path)
+{
+    return u8ToString(path.u8string());
+}
+
+inline std::filesystem::path utf8ToPath(std::string_view str)
+{
+    return std::filesystem::path(std::u8string(str.begin(), str.end()));
 }
 
 inline std::string toLowerCase(const std::string& inp)
