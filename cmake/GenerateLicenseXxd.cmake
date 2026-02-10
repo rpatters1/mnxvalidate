@@ -6,14 +6,12 @@ set(LICENSE_FILES
     "${CMAKE_SOURCE_DIR}/LICENSE"
     "${nlohmann_json_SOURCE_DIR}/LICENSE.MIT"
     "${nlohmann_json_schema_validator_SOURCE_DIR}/LICENSE"
-    "${miniz-cpp_SOURCE_DIR}/LICENSE.md"
 )
 
 set(LICENSE_PREFIXES
     mnxvalidate
     nlohmann_json
     json_schema_validator
-    miniz_cpp
 )
 
 # Ensure both lists have the same length

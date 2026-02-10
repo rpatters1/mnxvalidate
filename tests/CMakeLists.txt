@@ -32,7 +32,6 @@ if(mnxvalidate_BUILD_TESTING)
     # Include the necessary directories
     target_include_directories(mnxvalidate_tests PRIVATE
         ${CMAKE_SOURCE_DIR}/src       # Source files
-        ${FETCHCONTENT_BASE_DIR}/miniz-cpp-src
         ${GENERATED_DIR}              # Generated files
     )
 

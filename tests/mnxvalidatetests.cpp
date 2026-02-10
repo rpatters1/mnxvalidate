@@ -105,8 +105,8 @@ void setupTestDataPaths()
     auto workingDir = std::filesystem::current_path();
     ASSERT_TRUE(std::filesystem::is_directory(workingDir));
     ASSERT_GE(std::distance(workingDir.begin(), workingDir.end()), 2);
-    ASSERT_EQ((--workingDir.end())->u8string(), "data");
-    ASSERT_EQ((--workingDir.parent_path().end())->u8string(), "tests");
+    ASSERT_EQ(utils::pathToString(*(--workingDir.end())), "data");
+    ASSERT_EQ(utils::pathToString(*(--workingDir.parent_path().end())), "tests");
     ASSERT_TRUE(std::filesystem::exists(getInputPath()));
     ASSERT_NO_THROW({
         auto outputDir = getOutputPath();
@@ -132,8 +132,8 @@ void copyInputToOutput(const std::string& fileName, std::filesystem::path& outpu
 
 void compareFiles(const std::filesystem::path& path1, const std::filesystem::path& path2)
 {
-    ASSERT_TRUE(std::filesystem::is_regular_file(path1)) << "unable to find " << path1.u8string();
-    ASSERT_TRUE(std::filesystem::is_regular_file(path2)) << "unable to find " << path2.u8string();
+    ASSERT_TRUE(std::filesystem::is_regular_file(path1)) << "unable to find " << utils::pathToString(path1);
+    ASSERT_TRUE(std::filesystem::is_regular_file(path2)) << "unable to find " << utils::pathToString(path2);
     std::ifstream file1(path1);
     ASSERT_TRUE(file1);
     std::ifstream file2(path2);
@@ -141,7 +141,7 @@ void compareFiles(const std::filesystem::path& path1, const std::filesystem::pat
     char c1, c2;
     while (file1.get(c1)) {
         ASSERT_TRUE(file2.get(c2));
-        ASSERT_EQ(c1, c2) << "comparing " << path1.u8string() << " and " << path2.u8string();
+        ASSERT_EQ(c1, c2) << "comparing " << utils::pathToString(path1) << " and " << utils::pathToString(path2);
     }
     EXPECT_FALSE(file2.get(c2));
 }
@@ -156,21 +156,21 @@ void assertStringsInFile(const std::vector<std::string>& targets, const std::fil
         auto matchingFile = std::find_if(begin(it), end(it), [&extension](const std::filesystem::directory_entry& entry) {
             return entry.is_regular_file() && entry.path().extension() == extension;
         });
-        ASSERT_NE(matchingFile, std::filesystem::end(it)) << "No file with extension " << extension.u8string() << " found in directory: " << filePath.u8string();
+        ASSERT_NE(matchingFile, std::filesystem::end(it)) << "No file with extension " << utils::pathToString(extension) << " found in directory: " << utils::pathToString(filePath);
         actualFilePath = matchingFile->path();
     } else {
-        FAIL() << "Path is neither a regular file nor a directory: " << filePath.u8string();
+        FAIL() << "Path is neither a regular file nor a directory: " << utils::pathToString(filePath);
     }
     std::ifstream file(actualFilePath, std::ios::binary);
-    ASSERT_TRUE(file.is_open()) << "failed to open file: " << actualFilePath.u8string();
+    ASSERT_TRUE(file.is_open()) << "failed to open file: " << utils::pathToString(actualFilePath);
     std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     for (const auto& target : targets) {
         if (target.size() > 1 && target[0] == '!') {
             EXPECT_EQ(fileContents.find(target.substr(1)), std::string::npos)
-                << "String \"" << target.substr(1) << "\" was not expected but was found in file: " << actualFilePath.u8string();
+                << "String \"" << target.substr(1) << "\" was not expected but was found in file: " << utils::pathToString(actualFilePath);
         } else {
             EXPECT_NE(fileContents.find(target), std::string::npos)
-                << "String \"" << target << "\" not found in file: " << actualFilePath.u8string();
+                << "String \"" << target << "\" not found in file: " << utils::pathToString(actualFilePath);
         }
     }
 }

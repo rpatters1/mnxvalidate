@@ -20,7 +20,6 @@
  * THE SOFTWARE.
  */
 #include <iostream>
-#include <set>
 #include <optional>
 #include <memory>
 #include <chrono>
@@ -28,8 +27,6 @@
 
 #include "mnxvalidate.h"
 #include "utils/stringutils.h"
-
-static const std::set<std::string_view> inputExtensions = { ".mnx", ".json" };
 
 static int showHelpPage(const std::string_view& programName)
 {
@@ -68,7 +65,8 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
     std::filesystem::path inputFilePattern = rawInputPattern;
 
     // collect inputs
-    const bool isSpecificFileOrDirectory = inputFilePattern.u8string().find('*') == std::string::npos && inputFilePattern.u8string().find('?') == std::string::npos;
+    const auto inputPatternU8 = inputFilePattern.u8string();
+    const bool isSpecificFileOrDirectory = inputPatternU8.find(u8'*') == std::u8string::npos && inputPatternU8.find(u8'?') == std::u8string::npos;
     bool isSpecificFile = isSpecificFileOrDirectory && inputFilePattern.has_filename();
     if (std::filesystem::is_directory(inputFilePattern)) {
         isSpecificFile = false;
@@ -89,7 +87,7 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
     }
 
     if (isSpecificFileOrDirectory && !std::filesystem::exists(rawInputPattern) && !mnxValidateContext.forTestOutput()) {
-        throw std::runtime_error("Input path " + inputFilePattern.u8string() + " does not exist or is not a file or directory.");
+        throw std::runtime_error("Input path " + utils::pathToString(inputFilePattern) + " does not exist or is not a file or directory.");
     }
 
     // convert wildcard pattern to regex
@@ -115,12 +113,11 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
                 }
             }
             if (!entry.is_directory()) {
-                mnxValidateContext.logMessage(LogMsg() << "considered file " << entry.path().u8string(), LogSeverity::Verbose);
+                mnxValidateContext.logMessage(LogMsg() << "considered file " << utils::pathToString(entry.path()), LogSeverity::Verbose);
             }
             if (entry.is_regular_file() && std::regex_match(entry.path().filename().native(), regex)) {
                 auto inputFilePath = entry.path();
-                std::string ext = utils::toLowerCase(inputFilePath.extension().u8string());
-                if (inputExtensions.find(ext) != inputExtensions.end()) {
+                if (utils::hasExtension(inputFilePath, MNX_EXTENSION) || utils::hasExtension(inputFilePath, JSON_EXTENSION)) {
                     pathsToProcess.emplace_back(inputFilePath);
                 }
             }

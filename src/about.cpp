@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 #include <iostream>
+#include <array>
+#include <iterator>
 
 #include "mnxvalidate.h"
 
@@ -35,21 +37,15 @@ namespace json_schema {
 }
 }
 
-namespace miniz_cpp {
-#include "miniz_cpp_license.xxd"
-}
+constexpr std::basic_string_view<unsigned char> mnxvalidateLicense(mnxvalidate::LICENSE, std::size(mnxvalidate::LICENSE));
+constexpr std::basic_string_view<unsigned char> nlohmannLicense(nlohmann::LICENSE_MIT, std::size(nlohmann::LICENSE_MIT));
+constexpr std::basic_string_view<unsigned char> jsonSchemaValidatorLicense(nlohmann::json_schema::LICENSE, std::size(nlohmann::json_schema::LICENSE));
 
-static const std::basic_string_view<unsigned char> mnxvalidateLicense(mnxvalidate::LICENSE, mnxvalidate::LICENSE_len);
-static const std::basic_string_view<unsigned char> nlohmannLicense(nlohmann::LICENSE_MIT, nlohmann::LICENSE_MIT_len);
-static const std::basic_string_view<unsigned char> jsonSchemaValidatorLicense(nlohmann::json_schema::LICENSE, nlohmann::json_schema::LICENSE_len);
-static const std::basic_string_view<unsigned char> minizLicense(miniz_cpp::LICENSE_md, miniz_cpp::LICENSE_md_len);
-
-static const std::array<std::pair<std::string_view, std::basic_string_view<unsigned char>>, 5> licenses = {{
+constexpr auto licenses = std::to_array<std::pair<std::string_view, std::basic_string_view<unsigned char>>>({
     { "mnxvalidate", mnxvalidateLicense },
     { "nlohmann json", nlohmannLicense },
     { "json schema validator", jsonSchemaValidatorLicense },
-    //{ "miniz-cpp", minizLicense },
-}};
+});
 
 namespace mnxvalidate {
 

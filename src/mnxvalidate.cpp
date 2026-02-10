@@ -118,7 +118,7 @@ void MnxValidateContext::logMessage(LogMsg&& msg, bool alwaysShow, LogSeverity s
         errorOccurred = true;
     }
     msg.flush();
-    std::string inputFile = inputFilePath.filename().u8string();
+    std::string inputFile = utils::pathToString(inputFilePath.filename());
     if (!inputFile.empty()) {
         inputFile += ' ';
     }
@@ -175,7 +175,7 @@ void MnxValidateContext::startLogging(const std::filesystem::path& defaultLogPat
     errorOccurred = false;
     if (!noLog && logFilePath.has_value() && !logFile) {
         if (forTestOutput()) {
-            std::cout << "Logging to " << logFilePath.value().u8string() << std::endl;
+            std::cout << "Logging to " << utils::pathToString(logFilePath.value()) << std::endl;
             return;
         }
         auto& path = logFilePath.value();
@@ -243,7 +243,7 @@ void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) co
 {
     try {
         if (!std::filesystem::is_regular_file(inpFilePath) && !forTestOutput()) {
-            throw std::runtime_error("Input file " + inpFilePath.u8string() + " does not exist or is not a file.");
+            throw std::runtime_error("Input file " + utils::pathToString(inpFilePath) + " does not exist or is not a file.");
         }
         constexpr char kProcessingMessage[] = "Processing File: ";
         constexpr size_t kProcessingMessageSize = sizeof(kProcessingMessage) - 1; // account for null terminator.
@@ -251,7 +251,7 @@ void MnxValidateContext::processFile(const std::filesystem::path inpFilePath) co
         // log header for each file
         logMessage(LogMsg(), true);
         logMessage(LogMsg() << delimiter, true);
-        logMessage(LogMsg() << kProcessingMessage << inpFilePath.u8string(), true);
+        logMessage(LogMsg() << kProcessingMessage << utils::pathToString(inpFilePath), true);
         logMessage(LogMsg() << delimiter, true);
         resetForFile(inpFilePath); // reset after logging the header
 
