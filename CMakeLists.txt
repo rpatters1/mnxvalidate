@@ -85,17 +85,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 set(_original_WARN_DEPRECATED ${CMAKE_WARN_DEPRECATED})
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Suppress deprecation warnings for external projects" FORCE)
 
-# Fetch miniz-cpp
-FetchContent_Declare(
-    miniz-cpp
-    GIT_REPOSITORY https://github.com/rpatters1/miniz-cpp.git  #Use my fork until/unless PR #27 is merged on the upstream repo
-    GIT_TAG        3097a4b80528ebad5a51cd9315a39a9b5fa12e54
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    SOURCE_SUBDIR not_a_directory # this is a hack to prevent FetchContent_Declare from running the fetched content cmake.
-    # see https://stackoverflow.com/questions/79261625/cmake-fetchcontent-with-header-only-project/79261858#79261858
-)
-FetchContent_MakeAvailable(miniz-cpp)
-
 include(cmake/Dependencies.cmake) # GitHub branches/tags for MNX and MUSX
 
 # Define a cache variable for the local MNX C++ DOM path relative to the source directory.
@@ -142,7 +131,6 @@ add_executable(mnxvalidate
     src/main.cpp
     src/mnxvalidate.cpp
     src/about.cpp
-    src/utils/ziputils.cpp
 )
 
 # For the mnxvalidate target specifically
@@ -165,7 +153,6 @@ set(MUSX_DISPLAY_NODE_NAMES ON CACHE BOOL "Write node names to std::cout as they
 # Ensure the include directories are added
 add_dependencies(mnxvalidate GenerateLicenseXxd)
 target_include_directories(mnxvalidate PRIVATE  "${FETCHCONTENT_BASE_DIR}/ezgz-src")
-target_include_directories(mnxvalidate SYSTEM PRIVATE  "${FETCHCONTENT_BASE_DIR}/miniz-cpp-src")
 target_include_directories(mnxvalidate PRIVATE ${GENERATED_DIR})
 target_include_directories(mnxvalidate PRIVATE ${MUSX_OBJECT_MODEL_DIR})
 target_include_directories(mnxvalidate PRIVATE ${CMAKE_SOURCE_DIR}/src)

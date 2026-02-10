@@ -20,7 +20,6 @@
  * THE SOFTWARE.
  */
 #include <iostream>
-#include <set>
 #include <optional>
 #include <memory>
 #include <chrono>
@@ -28,8 +27,6 @@
 
 #include "mnxvalidate.h"
 #include "utils/stringutils.h"
-
-static const std::set<std::string_view> inputExtensions = { ".mnx", ".json" };
 
 static int showHelpPage(const std::string_view& programName)
 {
@@ -120,8 +117,7 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
             }
             if (entry.is_regular_file() && std::regex_match(entry.path().filename().native(), regex)) {
                 auto inputFilePath = entry.path();
-                std::string ext = utils::toLowerCase(utils::pathToString(inputFilePath.extension()));
-                if (inputExtensions.find(ext) != inputExtensions.end()) {
+                if (utils::hasExtension(inputFilePath, MNX_EXTENSION) || utils::hasExtension(inputFilePath, JSON_EXTENSION)) {
                     pathsToProcess.emplace_back(inputFilePath);
                 }
             }

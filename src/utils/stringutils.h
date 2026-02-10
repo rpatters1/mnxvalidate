@@ -26,6 +26,7 @@
 #include <exception>
 #include <filesystem>
 #include <algorithm>
+#include <cctype>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -113,6 +114,26 @@ inline std::string pathToString(const std::filesystem::path& path)
 inline std::filesystem::path utf8ToPath(std::string_view str)
 {
     return std::filesystem::path(std::u8string(str.begin(), str.end()));
+}
+
+inline char8_t toLowerAscii(char8_t c)
+{
+    return (c >= u8'A' && c <= u8'Z') ? static_cast<char8_t>(c - u8'A' + u8'a') : c;
+}
+
+template <std::size_t N>
+inline bool hasExtension(const std::filesystem::path& path, const char8_t (&extension)[N])
+{
+    const auto pathExt = path.extension().u8string(); // includes leading dot
+    if (pathExt.size() != N || pathExt.empty() || pathExt.front() != u8'.') {
+        return false;
+    }
+    for (std::size_t i = 0; i + 1 < N; ++i) { // skip null terminator in extension
+        if (toLowerAscii(pathExt[i + 1]) != toLowerAscii(extension[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 inline std::string toLowerCase(const std::string& inp)
