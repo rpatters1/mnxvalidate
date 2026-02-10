@@ -34,8 +34,8 @@
 #include "utils/stringutils.h"
 #include "mnxdom.h"
 
-inline constexpr char8_t MNX_EXTENSION[]                = u8"mnx";
-inline constexpr char8_t JSON_EXTENSION[]               = u8"json";
+constexpr char8_t MNX_EXTENSION[]                = u8"mnx";
+constexpr char8_t JSON_EXTENSION[]               = u8"json";
 
 #ifdef _WIN32
 #define _ARG(S) L##S
