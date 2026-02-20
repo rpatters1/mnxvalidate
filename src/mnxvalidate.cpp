@@ -21,6 +21,7 @@
  */
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 
 #include "mnxvalidate.h"
 #include "mnxdom.h"
@@ -69,6 +70,8 @@ std::vector<const arg_char*> MnxValidateContext::parseOptions(int argc, arg_char
         } else if (next == _ARG("--testing")) {
             testOutput = true;
 #endif
+        } else if (next.rfind(_ARG("--"), 0) == 0) {
+            throw std::invalid_argument("Unknown option: " + std::string(_ARG_CONV(next)));
         } else {
             args.push_back(argv[x]);
         }
@@ -172,7 +175,6 @@ bool createDirectoryIfNeeded(const std::filesystem::path& path)
 
 void MnxValidateContext::startLogging(const std::filesystem::path& defaultLogPath, int argc, arg_char* argv[])
 {
-    errorOccurred = false;
     if (!noLog && logFilePath.has_value() && !logFile) {
         if (forTestOutput()) {
             std::cout << "Logging to " << utils::pathToString(logFilePath.value()) << std::endl;

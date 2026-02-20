@@ -24,9 +24,31 @@
 #include <memory>
 #include <chrono>
 #include <regex>
+#include <unordered_set>
 
 #include "mnxvalidate.h"
 #include "utils/stringutils.h"
+
+namespace {
+
+struct PathHash
+{
+    auto operator()(const std::filesystem::path& p) const noexcept {
+        return std::filesystem::hash_value(p);
+    }
+};
+
+std::filesystem::path normalizePathForDedupe(const std::filesystem::path& path)
+{
+    std::error_code ec;
+    std::filesystem::path absolutePath = std::filesystem::absolute(path, ec);
+    if (!ec) {
+        return absolutePath.lexically_normal();
+    }
+    return path.lexically_normal();
+}
+
+} // namespace
 
 static int showHelpPage(const std::string_view& programName)
 {
@@ -44,23 +66,24 @@ static int showHelpPage(const std::string_view& programName)
     std::cout << std::endl;
 
     std::cout << std::endl;
-    std::cout << "By default, if the input is a single file, messages are sent to std::cerr." << std::endl;
-    std::cout << "If the input is multiple files, messages are logged in `" << programName << "-logs` in the top-level input directory." << std::endl;
+    std::cout << "By default, messages are sent to std::cerr." << std::endl;
     std::cout << std::endl;
     std::cout << "Logging options:" << std::endl;
-    std::cout << "  --log [optional-logfile-path]   Always log messages instead of sending them to std::cerr" << std::endl;
+    std::cout << "  --log [optional-logfile-path]   Log messages to file instead of sending them to std::cerr" << std::endl;
     std::cout << "  --no-log                        Always send messages to std::cerr (overrides any other logging options)" << std::endl;
     std::cout << "  --quiet                         Only display errors and warning messages (overrides --verbose)" << std::endl;
     std::cout << "  --verbose                       Verbose output" << std::endl;
     std::cout << std::endl;
-    std::cout << "Any relative path is relative to the parent path of the input file or (for log files) to the top-level input folder." << std::endl;
+    std::cout << "Relative input patterns are resolved from the current working directory." << std::endl;
+    std::cout << "Relative log paths for --log are resolved from the first input pattern's parent directory." << std::endl;
 
     return 1;
 }
 
 using namespace mnxvalidate;
 
-void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValidateContext& mnxValidateContext, int argc, arg_char* argv[])
+void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValidateContext& mnxValidateContext, int argc, arg_char* argv[],
+                         std::unordered_set<std::filesystem::path, PathHash>& seenPaths)
 {
     std::filesystem::path inputFilePattern = rawInputPattern;
 
@@ -77,9 +100,6 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
         inputDir = std::filesystem::current_path() / inputDir;
     }
     bool inputIsOneFile = std::filesystem::is_regular_file(inputFilePattern);
-    if (!inputIsOneFile && !isSpecificFile && !mnxValidateContext.logFilePath.has_value()) {
-        mnxValidateContext.logFilePath = "";
-    }
     mnxValidateContext.startLogging(inputDir, argc, argv);
 
     if (mnxValidateContext.mnxSchemaPath.has_value() && !mnxValidateContext.mnxSchema.has_value()) {
@@ -105,6 +125,12 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
     // collect files to process first
     // this avoids potential infinite recursion if input and output are the same format
     std::vector<std::filesystem::path> pathsToProcess;
+    auto appendUniquePath = [&](const std::filesystem::path& inputFilePath) {
+        const auto normalizedPath = normalizePathForDedupe(inputFilePath);
+        if (seenPaths.emplace(normalizedPath).second) {
+            pathsToProcess.emplace_back(inputFilePath);
+        }
+    };
     auto iterate = [&](auto& iterator) {
         for (auto it = iterator; it != std::filesystem::end(iterator); ++it) {
             const auto& entry = *it;
@@ -118,13 +144,13 @@ void processInputPathArg(const std::filesystem::path& rawInputPattern, MnxValida
             if (entry.is_regular_file() && std::regex_match(entry.path().filename().native(), regex)) {
                 auto inputFilePath = entry.path();
                 if (utils::hasExtension(inputFilePath, MNX_EXTENSION) || utils::hasExtension(inputFilePath, JSON_EXTENSION)) {
-                    pathsToProcess.emplace_back(inputFilePath);
+                    appendUniquePath(inputFilePath);
                 }
             }
         }
     };
     if (inputIsOneFile || (mnxValidateContext.forTestOutput() && isSpecificFile)) {
-        pathsToProcess.push_back(inputFilePattern);
+        appendUniquePath(inputFilePattern);
     } else if (mnxValidateContext.recursiveSearch) {
         std::filesystem::recursive_directory_iterator it(inputDir);
         iterate(it);
@@ -147,7 +173,13 @@ int _MAIN(int argc, arg_char* argv[])
 
     MnxValidateContext mnxValidateContext(std::filesystem::path(*argv).stem().native());
 
-    std::vector<const arg_char*> args = mnxValidateContext.parseOptions(argc, argv);
+    std::vector<const arg_char*> args;
+    try {
+        args = mnxValidateContext.parseOptions(argc, argv);
+    } catch (const std::exception& e) {
+        mnxValidateContext.logMessage(LogMsg() << e.what(), LogSeverity::Error);
+        return 1;
+    }
 
     if (mnxValidateContext.showVersion) {
         std::cout << mnxValidateContext.programName << " " << MNXVALIDATE_VERSION << std::endl;
@@ -164,13 +196,12 @@ int _MAIN(int argc, arg_char* argv[])
 
     if (args.empty()) {
         return showHelpPage(mnxValidateContext.programName);
-    } else if (args.size() > 1 && !mnxValidateContext.logFilePath.has_value()) {
-        mnxValidateContext.logFilePath = "";
     }
 
     try {
+        std::unordered_set<std::filesystem::path, PathHash> seenPaths;
         for (const auto* arg : args) {
-            processInputPathArg(arg, mnxValidateContext, argc, argv);
+            processInputPathArg(arg, mnxValidateContext, argc, argv, seenPaths);
         }
     } catch (const std::exception& e) {
         mnxValidateContext.logMessage(LogMsg() << e.what(), LogSeverity::Error);
