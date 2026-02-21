@@ -22,6 +22,7 @@
 #include <string>
 #include <filesystem>
 #include <iterator>
+#include <sstream>
 
 #include "gtest/gtest.h"
 #include "mnxvalidate.h"
@@ -110,12 +111,11 @@ TEST(Logging, PatternFile)
     copyInputToOutput(inputFile, inputPath);
     inputPath = getOutputPath() / "val*.?nx";
     ArgList args1 = { MNXVALIDATE_NAME, utils::pathToString(inputPath) };
-    checkStderr("", [&]() {
+    checkStderr({ "Processing", "valid.mnx", "Schema validation succeeded", "!generic" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args1.argc(), args1.argv()), 0) << "validate " << utils::pathToString(inputPath);
     });
     auto logPath = inputPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
-    EXPECT_TRUE(std::filesystem::exists(logPath)) << "log file should have been created";
-    assertStringsInFile({ "Processing", "valid.mnx", "Schema validation succeeded", "!generic" }, logPath, ".log");
+    EXPECT_FALSE(std::filesystem::exists(logPath)) << "no log file should have been created";
 }
 
 TEST(Logging, Directory)
@@ -126,12 +126,11 @@ TEST(Logging, Directory)
     copyInputToOutput(inputFile, inputPath);
     inputPath = getOutputPath();
     ArgList args1 = { MNXVALIDATE_NAME, utils::pathToString(inputPath) };
-    checkStderr("", [&]() {
+    checkStderr({ "Processing", "valid.mnx", "Schema validation succeeded" }, [&]() {
         EXPECT_EQ(mnxValidateTestMain(args1.argc(), args1.argv()), 0) << "validate " << utils::pathToString(inputPath);
     });
     auto logPath = inputPath / (std::string(MNXVALIDATE_NAME) + "-logs");
-    EXPECT_TRUE(std::filesystem::exists(logPath)) << "log file should have been created";
-    assertStringsInFile({ "Processing", "valid.mnx", "Schema validation succeeded" }, logPath, ".log");
+    EXPECT_FALSE(std::filesystem::exists(logPath)) << "no log file should have been created";
 }
 
 TEST(Logging, MultipleInputs)
@@ -143,11 +142,61 @@ TEST(Logging, MultipleInputs)
     std::string invalidFile = "generic_nonascii_其れ.json";
     std::filesystem::path invalidPath;
     copyInputToOutput(invalidFile, invalidPath);
-    // specific file with appending
     ArgList args = { MNXVALIDATE_NAME, utils::pathToString(validPath), utils::pathToString(invalidPath) };
-    checkStderr("Schema validation failed", [&]() {
+    checkStderr({ "Processing", utils::pathToString(validPath.filename()), utils::pathToString(invalidPath.filename()),
+                  "Schema validation succeeded", "Schema validation failed" }, [&]() {
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << utils::pathToString(invalidPath);
     });
     auto logPath = validPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
-    assertStringsInFile({ "Processing", utils::pathToString(validPath.filename()), utils::pathToString(invalidPath.filename()), "Schema validation succeeded", "Schema validation failed" }, logPath, ".log");
+    EXPECT_FALSE(std::filesystem::exists(logPath)) << "no log file should have been created";
+}
+
+TEST(Logging, MultipleInputsReverseOrder)
+{
+    setupTestDataPaths();
+    std::string validFile = "valid.mnx";
+    std::filesystem::path validPath;
+    copyInputToOutput(validFile, validPath);
+    std::string invalidFile = "generic_nonascii_其れ.json";
+    std::filesystem::path invalidPath;
+    copyInputToOutput(invalidFile, invalidPath);
+    ArgList args = { MNXVALIDATE_NAME, utils::pathToString(invalidPath), utils::pathToString(validPath) };
+    checkStderr({ "Processing", utils::pathToString(validPath.filename()), utils::pathToString(invalidPath.filename()),
+                  "Schema validation succeeded", "Schema validation failed" }, [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << utils::pathToString(invalidPath);
+    });
+    auto logPath = validPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
+    EXPECT_FALSE(std::filesystem::exists(logPath)) << "no log file should have been created";
+}
+
+TEST(Logging, DuplicateInputsProcessedOnce)
+{
+    setupTestDataPaths();
+    std::string inputFile = "valid.mnx";
+    std::filesystem::path inputPath;
+    copyInputToOutput(inputFile, inputPath);
+    std::filesystem::path wildcardPath = inputPath.parent_path() / "val*.?nx";
+    ArgList args = { MNXVALIDATE_NAME, utils::pathToString(inputPath), utils::pathToString(wildcardPath), "--no-log" };
+
+    std::ostringstream nullStream;
+    std::streambuf* originalCout = std::cout.rdbuf(nullStream.rdbuf());
+    std::ostringstream errStream;
+    std::streambuf* originalCerr = std::cerr.rdbuf(errStream.rdbuf());
+
+    const int result = mnxValidateTestMain(args.argc(), args.argv());
+
+    std::cout.rdbuf(originalCout);
+    std::cerr.rdbuf(originalCerr);
+
+    EXPECT_EQ(result, 0) << "duplicate input paths should still validate successfully";
+    const std::string capturedErrors = errStream.str();
+    std::size_t processingCount = 0;
+    std::size_t position = 0;
+    while ((position = capturedErrors.find("Processing File:", position)) != std::string::npos) {
+        ++processingCount;
+        ++position;
+    }
+    EXPECT_EQ(processingCount, 1u) << "same file should only be processed once";
+    auto logPath = inputPath.parent_path() / (std::string(MNXVALIDATE_NAME) + "-logs");
+    EXPECT_FALSE(std::filesystem::exists(logPath)) << "no log file should have been created";
 }

@@ -68,3 +68,13 @@ TEST(Schema, EmbeddedSchemaNotValid)
         EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "validate " << utils::pathToString(inputPath);
     });
 }
+
+TEST(Schema, UnknownOption)
+{
+    setupTestDataPaths();
+    std::filesystem::path inputPath = getInputPath() / "valid.mnx";
+    ArgList args = { MNXVALIDATE_NAME, utils::pathToString(inputPath), "--bogus" };
+    checkStderr("Unknown option: --bogus", [&]() {
+        EXPECT_NE(mnxValidateTestMain(args.argc(), args.argv()), 0) << "unknown option should fail";
+    });
+}

@@ -1,13 +1,38 @@
 ## Validation ideas
 
-- validate voice uniqueness for sequence objects (should it be unique per staff?)
-
-### 2.1 completed
+### 3.0 completed
 
 - detect if a beam contains a mix of grace notes and non grace notes.
 - detect if different beams in the same measure contain the same event at the same level.
+- detect if a beam contains no events.
+- detect if beam events are not in measure/time order, including when the first event is not in the beam's containing measure.
+- detect if a beam includes an event that is actually a multi-note tremolo.
+- detect if beam events are from different voices.
+- detect if a beam hook direction is specified for more than one event.
 - detect if a sequence contains more musical time than the time signature specifies.
+- detect if tuplet and multi-note tremolo contents do not add up to the required exact duration.
+- detect tuplets with zero inner duration.
+- detect multi-note tremolos with fewer than two events.
 - detect if a content array in a sequence contains invalid entities.
+- validate tie semantics for `target`, `lv`, and `targetType` combinations.
+- validate that tied kit notes target the same kit component.
+- validate note pitch alteration range (+/-3).
+- validate that kit-note components exist in the part's kit.
+- validate global sound midi-number range (0-127).
+- detect if an ottava ends before it begins.
+- detect parts with zero staves.
+- validate that part kit sounds reference ids defined in `global.sounds`.
+- require beginning clefs for each non-kit staff in the first measure.
+- detect clef and sequence staff references to non-existent part staves.
+- detect full-measure sequences that still contain content.
+- detect empty layout groups.
+- detect layout staff sources with empty or invalid part references.
+- detect layout staff sources with out-of-range staff numbers for their part.
+- detect duplicate part+voice assignments within a layout staff.
+- validate page/system/layout-change layout references.
+- detect systems that do not start on the first measure and systems that regress/overlap previous systems.
+- detect layout changes that start at or past end-of-measure.
+- validate voice uniqueness for sequence objects per part-measure.
 
 ### 2.0 completed
 
@@ -43,4 +68,4 @@
 - labelRef values are not enforced by the schema
 - there needs to be a mechanism to specify automatic name/shortName for "labelref" values.
 - should "systems" be a required propery of the page object?
-
+- handle "color"
