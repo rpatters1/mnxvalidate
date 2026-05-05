@@ -2,7 +2,7 @@
 # MANUALLY EDIT THIS WHEN SWITCHING BETWEEN DEV AND RELEASE.
 
 # For dev cycle (point to branch):
-set(MNXDOM_GIT_TAG_OR_BRANCH "e7c947bf768caccf315426dcae0dfac02caf738b" CACHE STRING "")
+set(MNXDOM_GIT_TAG_OR_BRANCH "1d9822f8fc5ee568c14f1c699d4f10565908dc6b" CACHE STRING "")
 
 # For release (point to tag or commit hash):
 # set(MNXDOM_GIT_TAG_OR_BRANCH "7e1951c560d2914c49a4cab61f519fbff2f7a405" CACHE STRING "")
